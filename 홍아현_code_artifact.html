@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>아현이의 프로필 퀴즈 게임!</title>
+    <!-- Tailwind CSS for modern responsive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti library for celebration fireworks -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Cute Korean Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Gowun Dodum', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .font-jua {
+            font-family: 'Jua', sans-serif;
+        }
+        @keyframes bounce-slow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .animate-bounce-slow {
+            animation: bounce-slow 2.5s infinite ease-in-out;
+        }
+        @keyframes pop-in {
+            0% { transform: scale(0.85); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop {
+            animation: pop-in 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        /* Custom scrollbar for game container */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: rgba(99, 102, 241, 0.5);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-800 flex items-center justify-center min-h-screen p-2 sm:p-4">
+
+    <div id="app" class="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border-4 border-indigo-400 min-h-[680px] flex flex-col justify-between">
+        
+        <!-- School Classroom & Yard Background (CSS & SVG Art) -->
+        <div class="absolute inset-0 z-0 overflow-hidden bg-gradient-to-b from-sky-300 via-sky-100 to-emerald-100">
+            <!-- Clouds -->
+            <div class="absolute top-4 left-6 bg-white/80 w-16 h-6 rounded-full blur-[1px]"></div>
+            <div class="absolute top-8 right-10 bg-white/70 w-20 h-7 rounded-full blur-[1px]"></div>
+            
+            <!-- School Building Illustration -->
+            <div class="absolute bottom-28 w-full flex justify-center opacity-90">
+                <div class="w-11/12 h-44 bg-amber-100 border-b-4 border-amber-300 rounded-t-xl relative flex flex-col items-center">
+                    <!-- Clock tower roof -->
+                    <div class="absolute -top-10 w-24 h-10 bg-rose-400 rounded-t-full border-2 border-rose-500 flex items-center justify-center">
+                        <div class="w-6 h-6 rounded-full bg-white border border-rose-300 flex items-center justify-center text-[8px] font-bold">⏰</div>
+                    </div>
+                    <!-- Windows Grid -->
+                    <div class="grid grid-cols-4 gap-3 mt-12 w-4/5">
+                        <div class="h-8 bg-sky-200 border-2 border-sky-400 rounded"></div>
+                        <div class="h-8 bg-sky-200 border-2 border-sky-400 rounded"></div>
+                        <div class="h-8 bg-sky-200 border-2 border-sky-400 rounded"></div>
+                        <div class="h-8 bg-sky-200 border-2 border-sky-400 rounded"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Green Ground / Yard -->
+            <div class="absolute bottom-0 w-full h-32 bg-gradient-to-t from-emerald-500 to-emerald-400 border-t-4 border-emerald-600"></div>
+            <!-- School Gate Flag -->
+            <div class="absolute bottom-24 left-4 text-xs bg-yellow-300 px-2 py-1 rounded font-bold border border-yellow-500 text-slate-800 shadow">
+                🏫 우리 학교
+            </div>
+        </div>
+
+        <!-- TOP BAR / HEADER -->
+        <div class="relative z-10 p-3 sm:p-4 flex justify-between items-center font-jua">
+            <div class="bg-white/90 backdrop-blur-md px-3.5 py-1.5 rounded-full text-sm text-indigo-900 border-2 border-indigo-200 shadow-md flex items-center gap-1.5">
+                <span>🏫</span> <span>아현이의 퀴즈 세상</span>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <button id="mute-btn" onclick="toggleAudio()" class="bg-white/90 backdrop-blur-md p-1.5 px-2.5 rounded-full text-xs font-bold border-2 border-indigo-200 shadow text-slate-700 hover:bg-slate-100">
+                    🔊 소리 켜짐
+                </button>
+                <div id="progress-badge" class="hidden bg-amber-400 text-amber-950 backdrop-blur-md px-3 py-1 rounded-full text-xs sm:text-sm font-extrabold border-2 border-amber-300 shadow">
+                    <span id="current-q-num">1</span> / 9
+                </div>
+            </div>
+        </div>
+
+        <!-- CENTER CONTENT SCREEN STATES -->
+        <div class="relative z-10 flex-1 flex flex-col items-center justify-between p-4 text-center">
+
+            <!-- CHARACTER AVATAR CONTAINER (Ponytailed Smiling Girl Artwork) -->
+            <div id="character-container" class="relative my-2 animate-bounce-slow">
+                <!-- SVG Vector Illustration of Ponytailed Girl -->
+                <div class="w-36 h-36 sm:w-40 sm:h-40 rounded-full bg-white/90 border-4 border-pink-400 shadow-xl overflow-hidden flex items-center justify-center relative">
+                    <svg id="ahyeon-svg" class="w-32 h-32 sm:w-36 sm:h-36" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Ponytail Hair Back -->
+                        <path id="ponytail" d="M72 38 C 85 25, 90 45, 82 55 C 75 62, 70 48, 68 42 Z" fill="#4A2E2B" />
+                        <!-- Hair Ribbon -->
+                        <path d="M68 38 Q 72 35 70 42 Q 65 40 68 38 Z" fill="#FF4B8B" />
+                        <circle cx="69" cy="39" r="3" fill="#FF85B3" />
+
+                        <!-- Head Base -->
+                        <circle cx="50" cy="50" r="28" fill="#FFE0BD" />
+
+                        <!-- Front Hair / Bangs -->
+                        <path d="M24 45 C 25 28, 75 28, 76 45 C 70 34, 58 35, 50 38 C 42 35, 30 34, 24 45 Z" fill="#5C3A36" />
+                        
+                        <!-- Face Features: Eyes -->
+                        <g id="eyes-happy">
+                            <!-- Left Eye (Smiling Curve) -->
+                            <path d="M38 48 Q 42 42 46 48" stroke="#331A15" stroke-width="2.8" stroke-linecap="round" fill="none" />
+                            <!-- Right Eye (Smiling Curve) -->
+                            <path d="M54 48 Q 58 42 62 48" stroke="#331A15" stroke-width="2.8" stroke-linecap="round" fill="none" />
+                        </g>
+
+                        <g id="eyes-sad" class="hidden">
+                            <!-- Sad Eyes -->
+                            <path d="M38 46 Q 42 50 46 46" stroke="#331A15" stroke-width="2.5" stroke-linecap="round" fill="none" />
+                            <path d="M54 46 Q 58 50 62 46" stroke="#331A15" stroke-width="2.5" stroke-linecap="round" fill="none" />
+                            <!-- Tear drop -->
+                            <ellipse cx="64" cy="52" rx="1.5" ry="2.5" fill="#38BDF8" />
+                        </g>
+
+                        <!-- Rosy Cheeks -->
+                        <ellipse cx="36" cy="53" rx="4" ry="2.5" fill="#FF85A2" opacity="0.6" />
+                        <ellipse cx="64" cy="53" rx="4" ry="2.5" fill="#FF85A2" opacity="0.6" />
+
+                        <!-- Mouth -->
+                        <path id="mouth-happy" d="M43 56 Q 50 64 57 56 Z" fill="#E11D48" />
+                        <path id="mouth-sad" d="M44 60 Q 50 55 56 60" stroke="#E11D48" stroke-width="2.5" stroke-linecap="round" fill="none" class="hidden" />
+
+                        <!-- Clothes / School Uniform -->
+                        <path d="M26 78 C 30 70, 70 70, 74 78 L 80 100 L 20 100 Z" fill="#3B82F6" />
+                        <path d="M42 70 L 50 82 L 58 70 Z" fill="#FFFFFF" />
+                        <path d="M48 74 L 52 74 L 51 86 L 49 86 Z" fill="#EF4444" />
+                    </svg>
+                </div>
+                
+                <!-- Name Badge -->
+                <div class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-pink-500 text-white text-xs font-bold px-3 py-0.5 rounded-full shadow-md border-2 border-white whitespace-nowrap">
+                    6학년 아현이 ✨
+                </div>
+            </div>
+
+            <!-- STATE 1: START SCREEN -->
+            <div id="start-screen" class="flex flex-col items-center w-full animate-pop my-auto">
+                <div class="bg-white/90 backdrop-blur-md p-4 rounded-2xl border-2 border-indigo-200 shadow-lg mb-6 w-full">
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-indigo-950 font-jua mb-1">
+                        아현이에 대한 퀴즈!
+                    </h1>
+                    <p class="text-indigo-700 text-xs sm:text-sm font-medium">
+                        안녕! 나는 6학년 아현이야 👋<br>
+                        나에 대해 얼마나 잘 알고 있는지 문제를 풀어볼래?
+                    </p>
+                </div>
+
+                <button onclick="startGame()" class="w-full py-4 px-6 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 hover:from-pink-600 hover:to-indigo-700 text-white text-xl font-extrabold font-jua rounded-2xl shadow-xl transform active:scale-95 transition-all duration-150 border-2 border-white/50 flex items-center justify-center gap-2">
+                    <span>🎮</span> <span>퀴즈 시작하기</span>
+                </button>
+            </div>
+
+            <!-- STATE 2: QUIZ GAMEPLAY SCREEN -->
+            <div id="quiz-screen" class="hidden flex-col items-center w-full max-w-md animate-pop my-auto">
+                
+                <!-- Character Speech Bubble -->
+                <div class="bg-white/95 backdrop-blur-md p-2.5 px-4 rounded-2xl shadow-md border-2 border-indigo-100 w-full mb-3 text-center">
+                    <p id="speech-bubble" class="text-xs sm:text-sm font-bold text-indigo-900">
+                        과연 몇 번이 정답일까? 맞춰봐!
+                    </p>
+                </div>
+
+                <!-- Question Card Box -->
+                <div class="bg-white/95 backdrop-blur-md rounded-2xl p-4 sm:p-5 shadow-xl w-full border-2 border-indigo-200 mb-3 text-center min-h-[90px] flex items-center justify-center">
+                    <h2 id="question-text" class="text-lg sm:text-xl font-extrabold text-slate-800 font-jua leading-snug break-keep">
+                        질문이 들어가는 곳입니다.
+                    </h2>
+                </div>
+
+                <!-- Options List Container -->
+                <div id="options-container" class="grid grid-cols-1 gap-2 w-full">
+                    <!-- Dynamic Answer Option Buttons -->
+                </div>
+
+                <!-- Feedback Result Overlay Message Box -->
+                <div id="feedback-box" class="hidden mt-3 p-3 rounded-2xl text-center w-full font-bold font-jua text-base sm:text-lg shadow-lg border-2 animate-pop">
+                    <!-- Feedback content dynamically added -->
+                </div>
+
+                <!-- Next Question Button -->
+                <button id="next-btn" onclick="nextQuestion()" class="hidden mt-3 w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-jua text-base sm:text-lg rounded-xl shadow-lg transform active:scale-95 transition-all border-2 border-indigo-300">
+                    다음 문제로 이동 ➡️
+                </button>
+            </div>
+
+            <!-- STATE 3: RESULT ENDING SCREEN -->
+            <div id="result-screen" class="hidden flex-col items-center w-full animate-pop my-auto">
+                <div class="bg-white/95 backdrop-blur-md p-5 rounded-2xl shadow-xl w-full border-2 border-indigo-200 text-center">
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-indigo-900 font-jua mb-1">
+                        🎉 퀴즈 완료! 🎉
+                    </h2>
+                    <p class="text-xs sm:text-sm text-slate-600 font-bold mb-4">
+                        수고했어! 몇 문제를 맞췄는지 확인해봐!
+                    </p>
+
+                    <!-- Score Highlight Circle -->
+                    <div class="bg-indigo-50 border-4 border-indigo-300 rounded-2xl p-4 mb-4">
+                        <div class="text-xs text-indigo-600 font-bold mb-1">최종 맞춘 개수</div>
+                        <div class="text-4xl sm:text-5xl font-extrabold text-indigo-600 font-jua">
+                            <span id="final-score">0</span> <span class="text-2xl text-indigo-400">/ 9 개</span>
+                        </div>
+                    </div>
+
+                    <!-- Personalized Feedback Comment -->
+                    <p id="score-comment" class="text-sm font-extrabold text-indigo-950 font-jua mb-2">
+                        평가 메시지가 출력되는 공간입니다.
+                    </p>
+                </div>
+
+                <button onclick="restartGame()" class="mt-4 w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-jua text-lg rounded-2xl shadow-lg hover:from-emerald-600 hover:to-teal-700 active:scale-95 transition-all border-2 border-white/50">
+                    🔄 다시 도전하기
+                </button>
+            </div>
+
+        </div>
+
+        <!-- FOOTER -->
+        <div class="relative z-10 p-2.5 text-center text-[11px] text-slate-600 font-bold bg-white/70 backdrop-blur-sm">
+            6학년 아현이의 프로필 퀴즈 게임 🌸
+        </div>
+    </div>
+
+    <script>
+        // WEB AUDIO API SYNTHESIZER FOR SOUND EFFECTS
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+        let soundEnabled = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function toggleAudio() {
+            soundEnabled = !soundEnabled;
+            const btn = document.getElementById('mute-btn');
+            btn.innerText = soundEnabled ? "🔊 소리 켜짐" : "🔇 소리 끔";
+        }
+
+        // Fanfare Sound Effect (Correct Answer)
+        function playFanfare() {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+            // Notes: C5, E5, G5, C6
+            const notes = [523.25, 659.25, 783.99, 1046.50];
+            const times = [0, 0.1, 0.2, 0.35];
+
+            notes.forEach((freq, idx) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, now + times[idx]);
+
+                gain.gain.setValueAtTime(0.25, now + times[idx]);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + times[idx] + (idx === 3 ? 0.6 : 0.2));
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start(now + times[idx]);
+                osc.stop(now + times[idx] + 0.7);
+            });
+        }
+
+        // Sad Sound Effect (Wrong Answer)
+        function playSadSound() {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+            const notes = [311.13, 293.66, 277.18, 261.63]; // Eb4, D4, C#4, C4
+            
+            notes.forEach((freq, idx) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(freq, now + (idx * 0.12));
+
+                gain.gain.setValueAtTime(0.18, now + (idx * 0.12));
+                gain.gain.exponentialRampToValueAtTime(0.001, now + (idx * 0.12) + 0.18);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start(now + (idx * 0.12));
+                osc.stop(now + (idx * 0.12) + 0.2);
+            });
+        }
+
+        // Click Sound Effect
+        function playClickSound() {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, now);
+            osc.frequency.exponentialRampToValueAtTime(200, now + 0.05);
+
+            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start(now);
+            osc.stop(now + 0.06);
+        }
+
+        // ALL 9 QUIZ QUESTIONS DATA
+        const questions = [
+            {
+                question: "1. 아현이가 가장 좋아하는 동물은?",
+                options: ["1) 강아지", "2) 파충류", "3) 고양이", "4) 햄스터"],
+                answer: 1, // 2번: 파충류
+                correctText: "2) 파충류"
+            },
+            {
+                question: "2. 아현이가 가장 좋아하는 과목은?",
+                options: ["1) 영어", "2) 수학", "3) 체육", "4) 사회"],
+                answer: 2, // 3번: 체육
+                correctText: "3) 체육"
+            },
+            {
+                question: "3. 아현이가 키우는 강아지 이름은?",
+                options: ["1) 애리", "2) 베리", "3) 아찌", "4) 구름"],
+                answer: 3, // 4번: 구름
+                correctText: "4) 구름"
+            },
+            {
+                question: "4. 아현이의 MBTI는?",
+                options: ["1) ENTP", "2) ENFP", "3) INTP", "4) INFP"],
+                answer: 1, // 2번: ENFP
+                correctText: "2) ENFP"
+            },
+            {
+                question: "5. 아현이가 가장 좋아하는 스포츠 종목은?",
+                options: ["1) 피구", "2) 축구", "3) 아이스하키", "4) 탁구"],
+                answer: 0, // 1번: 피구
+                correctText: "1) 피구"
+            },
+            {
+                question: "6. 아현이의 생일은?",
+                options: ["1) 12월18일", "2) 12월8일", "3) 11월18일", "4) 9월11일"],
+                answer: 0, // 1번: 12월18일
+                correctText: "1) 12월18일"
+            },
+            {
+                question: "7. 아현이가 다니는 학원 갯수는?",
+                options: ["1) 4개", "2) 1개", "3) 0개", "4) 2개"],
+                answer: 3, // 4번: 2개
+                correctText: "4) 2개"
+            },
+            {
+                question: "8. 아현이의 피구 번호는?",
+                options: ["1) 18번", "2) 17번", "3) 7번", "4) 20번"],
+                answer: 1, // 2번: 17번
+                correctText: "2) 17번"
+            },
+            {
+                question: "9. 아현이 동생의 학급은?",
+                options: ["1) 2학년1반", "2) 2학년3반", "3) 2학년2반"],
+                answer: 1, // 2번: 2학년3반
+                correctText: "2) 2학년3반"
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let isAnswered = false;
+
+        // Change Character Avatar Facial Expression
+        function setCharacterExpression(expression) {
+            const eyesHappy = document.getElementById('eyes-happy');
+            const eyesSad = document.getElementById('eyes-sad');
+            const mouthHappy = document.getElementById('mouth-happy');
+            const mouthSad = document.getElementById('mouth-sad');
+
+            if (expression === 'happy') {
+                eyesHappy.classList.remove('hidden');
+                eyesSad.classList.add('hidden');
+                mouthHappy.classList.remove('hidden');
+                mouthSad.classList.add('hidden');
+            } else if (expression === 'sad') {
+                eyesHappy.classList.add('hidden');
+                eyesSad.classList.remove('hidden');
+                mouthHappy.classList.add('hidden');
+                mouthSad.classList.remove('hidden');
+            }
+        }
+
+        function startGame() {
+            playClickSound();
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            document.getElementById('quiz-screen').classList.add('flex');
+            document.getElementById('progress-badge').classList.remove('hidden');
+            
+            currentQuestionIndex = 0;
+            score = 0;
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            isAnswered = false;
+            setCharacterExpression('happy');
+
+            const q = questions[currentQuestionIndex];
+            
+            document.getElementById('current-q-num').innerText = currentQuestionIndex + 1;
+            document.getElementById('question-text').innerText = q.question;
+            document.getElementById('speech-bubble').innerText = `문제 ${currentQuestionIndex + 1}번이야! 과연 정답은?`;
+
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            const feedbackBox = document.getElementById('feedback-box');
+            feedbackBox.classList.add('hidden');
+            document.getElementById('next-btn').classList.add('hidden');
+
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full py-3 px-4 bg-white/90 hover:bg-indigo-50 text-indigo-950 font-bold rounded-xl text-left border-2 border-indigo-200 transition-all transform active:scale-98 flex items-center justify-between shadow-sm text-sm sm:text-base";
+                btn.innerHTML = `<span>${opt}</span> <span class="check-icon opacity-0">✨</span>`;
+                btn.onclick = () => selectOption(idx);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function selectOption(selectedIndex) {
+            if (isAnswered) return;
+            isAnswered = true;
+
+            const q = questions[currentQuestionIndex];
+            const buttons = document.getElementById('options-container').querySelectorAll('button');
+            const feedbackBox = document.getElementById('feedback-box');
+            const nextBtn = document.getElementById('next-btn');
+
+            if (selectedIndex === q.answer) {
+                // CORRECT ANSWER
+                score++;
+                playFanfare();
+                setCharacterExpression('happy');
+
+                // Confetti Animation Fireworks
+                confetti({
+                    particleCount: 90,
+                    spread: 80,
+                    origin: { y: 0.6 }
+                });
+
+                buttons[selectedIndex].className = "w-full py-3 px-4 bg-emerald-500 text-white font-bold rounded-xl text-left border-2 border-emerald-300 shadow-md flex items-center justify-between text-sm sm:text-base";
+                buttons[selectedIndex].querySelector('.check-icon').classList.remove('opacity-0');
+
+                feedbackBox.className = "mt-3 p-3 rounded-2xl text-center w-full font-bold font-jua text-lg bg-emerald-100 text-emerald-900 border-2 border-emerald-400 animate-pop";
+                feedbackBox.innerHTML = "🎉 정답입니다!! 팡파레~! 🎺✨";
+                document.getElementById('speech-bubble').innerText = "우와!! 맞췄어! 완벽해! 👏";
+            } else {
+                // INCORRECT ANSWER
+                playSadSound();
+                setCharacterExpression('sad');
+
+                buttons[selectedIndex].className = "w-full py-3 px-4 bg-rose-500 text-white font-bold rounded-xl text-left border-2 border-rose-300 shadow-md flex items-center justify-between text-sm sm:text-base";
+                
+                // Highlight Correct Option in Green
+                buttons[q.answer].className = "w-full py-3 px-4 bg-emerald-100 text-emerald-900 font-bold rounded-xl text-left border-2 border-emerald-400 text-sm sm:text-base";
+
+                feedbackBox.className = "mt-3 p-3 rounded-2xl text-center w-full font-bold font-jua text-base bg-rose-100 text-rose-900 border-2 border-rose-300 animate-pop";
+                feedbackBox.innerHTML = `아쉽네요 ㅜㅜ <br><span class="text-xs sm:text-sm font-semibold text-rose-700">정답은 '${q.correctText}' 이었어!</span>`;
+                document.getElementById('speech-bubble').innerText = "아쉽네요 ㅜㅜ 다음 문제는 맞출 수 있을 거야!";
+            }
+
+            feedbackBox.classList.remove('hidden');
+            nextBtn.classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            playClickSound();
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                loadQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            document.getElementById('result-screen').classList.add('flex');
+
+            document.getElementById('final-score').innerText = score;
+
+            const scoreComment = document.getElementById('score-comment');
+            if (score === 9) {
+                setCharacterExpression('happy');
+                scoreComment.innerText = "🥇 대박!! 9개 모두 정답! 너는 아현이의 영혼의 찐친이야! 💕";
+                confetti({ particleCount: 180, spread: 100, origin: { y: 0.5 } });
+            } else if (score >= 6) {
+                setCharacterExpression('happy');
+                scoreComment.innerText = "✨ 우와! 아현이에 대해 정말 잘 아는 아주 친한 친구구나!";
+            } else if (score >= 3) {
+                setCharacterExpression('happy');
+                scoreComment.innerText = "🙂 오~ 나름 잘 맞췄는걸? 아현이랑 조금 더 가까워져봐!";
+            } else {
+                setCharacterExpression('sad');
+                scoreComment.innerText = "아쉽네요 ㅜㅜ 다 잘 맞추지 못했지만 이제 아현이에 대해 더 잘 알게 되었지?";
+            }
+        }
+
+        function restartGame() {
+            playClickSound();
+            document.getElementById('result-screen').classList.add('hidden');
+            startGame();
+        }
+    </script>
+</body>
+</html>

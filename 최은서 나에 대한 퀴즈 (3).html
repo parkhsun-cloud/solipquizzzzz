@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>나에 대한 퀴즈</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#e8f6ff;--card:#fff;--tx:#12324a;--main:#4db6f5;--ok:#2ecc71;--no:#e74c3c;--bd:#cfe9fa}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e2233;--card:#16354c;--tx:#e8f6ff;--bd:#2a5576}}
+:root[data-theme="dark"]{--bg:#0e2233;--card:#16354c;--tx:#e8f6ff;--bd:#2a5576}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;padding:16px}
+.wrap{max-width:520px;margin:0 auto}
+.card{background:var(--card);border-radius:18px;padding:20px;box-shadow:0 4px 14px rgba(77,182,245,.25)}
+h1{margin:0 0 8px;font-size:26px;text-align:center}
+.bar{height:8px;background:var(--bd);border-radius:8px;overflow:hidden;margin-bottom:14px}
+.bar div{height:100%;background:var(--main);transition:width .3s}
+.q{font-size:19px;font-weight:700;margin:6px 0 14px}
+.opt,.btn{display:block;width:100%;padding:13px;margin:8px 0;border:2px solid var(--bd);border-radius:12px;background:transparent;color:var(--tx);font-size:16px;text-align:left;cursor:pointer}
+.btn{background:var(--main);border-color:var(--main);color:#fff;text-align:center;font-weight:700}
+.opt.sel{border-color:var(--main);background:rgba(77,182,245,.2)}
+.opt.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.opt.no{background:var(--no);border-color:var(--no);color:#fff}
+input[type=text]{width:100%;padding:13px;border:2px solid var(--bd);border-radius:12px;font-size:16px;background:transparent;color:var(--tx)}
+.msg{margin:10px 0;font-weight:700}
+.center{text-align:center}
+.medal{font-size:70px}
+.rank{font-size:30px;font-weight:800;margin:4px 0}
+.lb{display:flex;align-items:center;gap:10px;padding:10px 12px;margin:6px 0;border:2px solid var(--bd);border-radius:12px}.lb.me{border-color:var(--main);background:rgba(77,182,245,.2)}.lb b{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lb.plain{border-color:transparent;padding:6px 12px}.lb.plain .rk{font-size:16px}.lb.plain.me{border-color:var(--main)}.lb .rk{width:44px;text-align:center;font-size:22px}.board{display:flex;justify-content:center;gap:8px;margin:14px 0}
+.board div{flex:1;padding:10px 4px;border-radius:12px;border:2px solid var(--bd);font-size:13px}
+.board .me{border-color:var(--main);background:rgba(77,182,245,.25);font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap"><div class="card" id="app"></div></div>
+<script>
+var Q=[
+{t:"내가 키우는 반려견의 종은?",type:"one",o:["푸들","비숑","포메라니안","말티푸"],a:3},
+{t:"내가 다니는 학원/수업을 모두 적어보세요! (예: 쉼표로 구분)",type:"text",k:["수학","영어","국어","줄넘기"],ans:"수학, 영어, 국어 과외, 줄넘기"},
+{t:"내가 제일 좋아하는 과목은?",type:"one",o:["국어","수학","영어","사회"],a:3},
+{t:"내가 가장 좋아하는 아이돌은?",type:"one",o:["아이브","하츠투하츠","뉴진스","르세라핌"],a:1},
+{t:"내가 제일 좋아하는 멤버는?",type:"one",o:["이안","예온","스텔라","에이나","유하","지우","주은","카르멘"],a:0},
+{t:"내가 제일 좋아하는 성격은?",type:"one",o:["착하고 유쾌한 성격","차분하고 조용한 성격","열정적이고 급한 성격","시크하고 쿨한 성격"],a:0},
+{t:"내 MBTI는?",type:"one",o:["ENFP","ISTP","ESTJ","INFJ"],a:2},
+{t:"내가 제일 좋아하는 색은?",type:"one",o:["분홍색","하늘색","보라색","노란색"],a:1},
+{t:"내가 잘하는 스포츠는?",type:"one",o:["수영","축구","농구","줄넘기"],a:3},
+{t:"나는 더위와 추위 중 무엇을 더 많이 탈까?",type:"one",o:["더위","추위"],a:1},
+{t:"내가 여행 가본 나라를 모두 고르세요! (여러 개)",type:"multi",o:["아부다비","미국","호주","일본","프랑스","태국"],a:[0,1,2]}
+];
+var i=0,score=0,done=false,sel=[],app=document.getElementById("app");
+function start(){i=0;score=0;intro()}
+var player="",startT=0;
+function fmt(ms){if(ms==null)return'-';var t=Math.round(ms/1000);return Math.floor(t/60)+'분 '+(t%60)+'초'}
+function intro(){
+app.innerHTML='<div class="center"><div class="medal">🐶</div><h1>나에 대한 퀴즈</h1><p>점수가 같으면 빨리 끝낸 사람이 위!<br>나를 얼마나 잘 아는지 맞춰보세요!<br>총 '+Q.length+'문제</p></div><input type="text" id="nm" maxlength="10" placeholder="내 이름을 적어주세요" value="'+player+'"><button class="btn" onclick="go()">시작하기</button>';
+ownerBtn();
+}
+async function resetRank(){
+if(!confirm("랭킹을 전부 지울까요?"))return;
+try{localStorage.removeItem(LS)}catch(e){}
+try{var db=await claude.use("db");if(db){var sn=await db.collection("scores2").get();
+for(var k=0;k<sn.docs.length;k++){await db.doc("scores2/"+sn.docs[k].id).delete()}}}catch(e){}
+alert("랭킹을 지웠어요!");
+}
+async function ownerBtn(){try{var u=await claude.use("user");if(u&&u.isOwner()){var b=document.createElement("button");b.className="opt";b.textContent="🗑 랭킹 지우기 (주인 전용)";b.onclick=resetRank;app.appendChild(b)}}catch(e){}}
+function go(){var v=document.getElementById("nm").value.trim();if(!v){document.getElementById("nm").style.borderColor="#e74c3c";return}player=v;i=0;score=0;startT=Date.now();show()}
+function show(){
+var q=Q[i];done=false;sel=[];
+var h='<div class="bar"><div style="width:'+(i/Q.length*100)+'%"></div></div><div>'+(i+1)+' / '+Q.length+' · 맞은 개수 '+score+'</div><div class="q">'+q.t+'</div>';
+if(q.type=="text"){h+='<input type="text" id="tx" placeholder="여기에 적어보세요">'}
+else{q.o.forEach(function(o,n){h+='<button class="opt" id="o'+n+'" onclick="pick('+n+')">'+o+'</button>'})}
+if(q.type!="one")h+='<button class="btn" id="sub" onclick="submit()">제출</button>';
+h+='<div class="msg" id="msg"></div><div id="nx"></div>';
+app.innerHTML=h;
+}
+function setMsg(ok,extra){document.getElementById("msg").innerHTML=(ok?"⭕ 정답!":"❌ 아쉬워요! ")+(extra||"");
+var last=i==Q.length-1;
+document.getElementById("nx").innerHTML='<button class="btn" onclick="next()">'+(last?"결과 보기":"다음 문제")+'</button>';
+var s=document.getElementById("sub");if(s)s.style.display="none";}
+function pick(n){
+if(done)return;var q=Q[i];
+if(q.type=="one"){
+done=true;var ok=n==q.a;if(ok)score++;
+document.getElementById("o"+q.a).classList.add("ok");
+if(!ok)document.getElementById("o"+n).classList.add("no");
+setMsg(ok);
+}else{
+var p=sel.indexOf(n);if(p<0)sel.push(n);else sel.splice(p,1);
+document.getElementById("o"+n).classList.toggle("sel");
+}}
+function submit(){
+if(done)return;var q=Q[i];done=true;var ok;
+if(q.type=="text"){
+var v=document.getElementById("tx").value.replace(/\s/g,"");
+ok=q.k.every(function(k){return v.indexOf(k)>=0});
+if(ok)score++;
+document.getElementById("tx").style.borderColor=ok?"#2ecc71":"#e74c3c";
+setMsg(ok,"<br>정답: "+q.ans);
+}else{
+ok=sel.length==q.a.length&&q.a.every(function(x){return sel.indexOf(x)>=0});
+if(ok)score++;
+q.o.forEach(function(o,n){var el=document.getElementById("o"+n);
+if(q.a.indexOf(n)>=0)el.classList.add("ok");else if(sel.indexOf(n)>=0)el.classList.add("no")});
+setMsg(ok);
+}}
+function next(){i++;if(i>=Q.length)result();else show()}
+var LS="quizScores2";
+function esc(t){return String(t).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function localAll(){try{return JSON.parse(localStorage.getItem(LS)||"[]")}catch(e){return[]}}
+function localAdd(r){try{var l=localAll();l.push(r);localStorage.setItem(LS,JSON.stringify(l))}catch(e){}}
+async function saveAndLoad(rec){
+var rows=null;
+try{
+var db=await claude.use("db");
+if(db){
+try{await db.collection("scores2").add(rec)}catch(e){localAdd(rec)}
+try{var snap=await db.collection("scores2").orderBy("score","desc").limit(50).get();
+rows=snap.docs.map(function(d){return d.data()})}catch(e){}
+}else localAdd(rec);
+}catch(e){localAdd(rec)}
+if(!rows)rows=localAll();
+return rows;
+}
+async function result(){
+var rec={name:player,score:score,time:Date.now()-startT,t:Date.now()};
+app.innerHTML='<div class="center"><div class="medal">⏳</div><h2>'+score+' / '+Q.length+' 정답</h2><p>랭킹을 불러오는 중...</p></div>';
+var rows=await saveAndLoad(rec);
+rows.sort(function(a,b){return b.score-a.score||(a.time==null?1e12:a.time)-(b.time==null?1e12:b.time)||a.t-b.t});
+var top=rows.slice(0,10),myIdx=-1;
+rows.forEach(function(r,n){if(r.t===rec.t&&r.name===rec.name&&myIdx<0)myIdx=n});
+var med=["🥇","🥈","🥉"];
+var h='<div class="center"><h1>🏆 랭킹</h1><h2>'+esc(player)+' : '+score+' / '+Q.length+'개 정답</h2><p>걸린 시간 '+fmt(rec.time)+'<br>내 순위는 <b>'+(myIdx+1)+'등</b> / '+rows.length+'명</p></div>';
+top.forEach(function(r,n){
+h+='<div class="lb'+(n>=3?" plain":"")+(n==myIdx?" me":"")+'"><span class="rk">'+(n<3?med[n]:(n+1)+'등')+'</span><b>'+esc(r.name)+'</b><span>'+r.score+'개 · '+fmt(r.time)+'</span></div>';
+});
+if(myIdx>=10)h+='<div class="lb plain me"><span class="rk">'+(myIdx+1)+'등</span><b>'+esc(player)+'</b><span>'+score+'개 · '+fmt(rec.time)+'</span></div>';
+h+='<button class="btn" onclick="intro()">다시 하기</button>';
+app.innerHTML=h;
+}
+intro();
+</script>
+</body>
+</html>

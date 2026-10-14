@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>나에 대한 퀴즈</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px 14px 40px;
+    font-family: "Noto Sans KR", system-ui, -apple-system, sans-serif;
+    background: linear-gradient(135deg, #eaf4ff, #f8efff);
+    color: #20243a;
+  }
+  main {
+    max-width: 760px; margin: 0 auto; background: white;
+    border-radius: 24px; padding: 26px;
+    box-shadow: 0 12px 35px rgba(46, 55, 100, .13);
+  }
+  header { text-align: center; margin-bottom: 26px; }
+  .ball { font-size: 42px; }
+  h1 { margin: 8px 0; font-size: clamp(26px, 5vw, 36px); }
+  .sub { color: #69708a; margin: 0; }
+  .question {
+    border: 1px solid #e5e8f2; border-radius: 18px;
+    padding: 18px; margin: 16px 0; background: #fff;
+  }
+  .question h2 { font-size: 18px; margin: 0 0 14px; line-height: 1.5; }
+  .number {
+    display: inline-grid; place-items: center; width: 30px; height: 30px;
+    border-radius: 10px; background: #e9edff; color: #4658c9;
+    margin-right: 7px; font-size: 15px;
+  }
+  .options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+  label.option {
+    display: flex; align-items: center; gap: 9px; min-height: 46px;
+    border: 1px solid #dfe3ef; border-radius: 12px; padding: 10px 12px;
+    cursor: pointer; transition: .15s; overflow-wrap: anywhere;
+  }
+  label.option:hover { border-color: #7d8af0; background: #f7f8ff; }
+  label.option:has(input:checked) {
+    border-color: #5a6bea; background: #eef0ff; box-shadow: 0 0 0 1px #5a6bea inset;
+  }
+  input[type="radio"] { accent-color: #5365df; width: 17px; height: 17px; flex: 0 0 auto; }
+  .actions { display: flex; gap: 10px; margin-top: 24px; }
+  button {
+    flex: 1; border: 0; border-radius: 14px; padding: 15px 18px;
+    font-size: 16px; font-weight: 750; cursor: pointer;
+  }
+  #grade { background: #5365df; color: white; }
+  #reset { background: #edf0f8; color: #343a55; }
+  button:hover { filter: brightness(.97); }
+  #result {
+    display: none; margin-top: 22px; padding: 22px; border-radius: 18px;
+    text-align: center; background: #f0f3ff; border: 1px solid #dce2ff;
+  }
+  #score { font-size: 30px; font-weight: 850; margin: 4px 0; color: #4355cf; }
+  .feedback { margin: 10px 0 0; line-height: 1.8; text-align: left; }
+  .correct { color: #167447; font-weight: 700; }
+  .wrong { color: #c13b4a; font-weight: 700; }
+  @media (max-width: 480px) {
+    main { padding: 18px 13px; border-radius: 18px; }
+    .question { padding: 14px; }
+    .options { grid-template-columns: 1fr; }
+    .actions { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="ball">⚾</div>
+    <h1>나에 대한 퀴즈</h1>
+    <p class="sub">나를 얼마나 잘 알고 있을까? · 총 10문제</p>
+  </header>
+
+  <form id="quiz">
+    <section class="question" data-answer="김영웅">
+      <h2><span class="number">1</span>내가 가장 좋아하는 야구선수는?</h2>
+      <div class="options"></div>
+    </section>
+    <section class="question" data-answer="김치찜">
+      <h2><span class="number">2</span>내가 가장 좋아하는 음식은?</h2>
+      <div class="options"></div>
+    </section>
+    <section class="question" data-answer="4개">
+      <h2><span class="number">3</span>내가 가본 야구장은 총 몇 가지일까요?</h2>
+      <div class="options"></div>
+    </section>
+    <section class="question" data-answer="12월 22일">
+      <h2><span class="number">4</span>나의 생일은?</h2>
+      <div class="options"></div>
+    </section>
+    <section class="question" data-answer="2024년 6월 3일">
+      <h2><span class="number">5</span>내가 전학 온 날짜와 연도는?</h2>
+      <div class="options"></div>
+    </section>
+    <section class="question" data-answer="김소은">
+      <h2><span class="number">6</span>나의 4학년부터 6학년까지 계속 같은 사람의 이름은?</h2>
+      <div class="options"></div>
+    </section>
+    <section class="question" data-answer="곤드래밥">
+      <h2><span class="number">7</span>내가 가장 싫어하는 급식 메뉴는?</h2>
+      <div class="options"></div>
+    </section>
+    <section class="question" data-answer="없다">
+      <h2><span class="number">8</span>내가 좋아하는 급식 메뉴는?</h2>
+      <div class="options"></div>
+    </section>
+    <section class="question" data-answer="김치">
+      <h2><span class="number">9</span>내가 가장 싫어하는 음식의 종류는?</h2>
+      <div class="options"></div>
+    </section>
+    <section class="question" data-answer="최형우">
+      <h2><span class="number">10</span>내가 가지고 있는 골든글러브 유니폼은 누구의 유니폼일까요?</h2>
+      <div class="options"></div>
+    </section>
+
+    <div class="actions">
+      <button id="grade" type="button">정답 확인하기</button>
+      <button id="reset" type="button">다시 풀기</button>
+    </div>
+  </form>
+
+  <section id="result" aria-live="polite">
+    <h2>퀴즈 결과</h2>
+    <div id="score"></div>
+    <p id="message"></p>
+    <div class="feedback" id="feedback"></div>
+  </section>
+</main>
+
+<script>
+const choices = [
+  ["김영웅", "최형우", "구자욱", "디아즈", "강민호", "김지찬"],
+  ["치킨", "피자", "김치찜", "떡볶이", "햄버거", "라면"],
+  ["1개", "2개", "3개", "4개", "7개", "9개"],
+  ["12월 5일", "12월 10일", "12월 15일", "12월 22일", "12월 25일", "12월 30일"],
+  ["2024년 6월 1일", "2024년 6월 2일", "2024년 6월 3일", "2024년 6월 5일", "2024년 6월 10일", "2024년 6월 20일"],
+  ["김소은", "최은서", "윤민혁", "백인서", "김지용", "조채원"],
+  ["미역국", "카레", "곤드래밥", "비빔밥", "돈가스", "고기"],
+  ["치킨", "불고기", "떡볶이", "돈가스", "없다", "김치볶음밥"],
+  ["고기", "김치", "치즈", "과일", "면", "햄"],
+  ["최형우", "구자욱", "디아즈", "이승엽", "강민호", "김지찬"]
+];
+
+document.querySelectorAll(".question").forEach((question, index) => {
+  const optionsBox = question.querySelector(".options");
+  choices[index].forEach((choice, choiceIndex) => {
+    const label = document.createElement("label");
+    label.className = "option";
+    const radio = document.createElement("input");
+    radio.type = "radio";
+    radio.name = "q" + index;
+    radio.value = choice;
+    radio.id = `q${index}_${choiceIndex}`;
+    const text = document.createElement("span");
+    text.textContent = choice;
+    label.htmlFor = radio.id;
+    label.append(radio, text);
+    optionsBox.appendChild(label);
+  });
+});
+
+document.getElementById("grade").addEventListener("click", () => {
+  const questions = [...document.querySelectorAll(".question")];
+  const unanswered = questions.findIndex(q => !q.querySelector("input:checked"));
+  if (unanswered !== -1) {
+    alert(`${unanswered + 1}번 문제의 답을 골라 줘!`);
+    questions[unanswered].scrollIntoView({behavior: "smooth", block: "center"});
+    return;
+  }
+
+  let score = 0;
+  let details = "";
+  questions.forEach((q, i) => {
+    const answer = q.dataset.answer;
+    const picked = q.querySelector("input:checked").value;
+    const right = picked === answer;
+    if (right) score++;
+    details += `<p class="${right ? "correct" : "wrong"}">${i + 1}번: ${right ? "정답!" : "선택한 답: " + picked + " · 정답: " + answer}</p>`;
+    q.querySelectorAll("input").forEach(input => input.disabled = true);
+  });
+
+  document.getElementById("score").textContent = `${score} / 10점`;
+  document.getElementById("message").textContent =
+    score === 10 ? "완벽해! 나를 정말 잘 알고 있네! 🎉" :
+    score >= 7 ? "잘했어! 나에 대해 꽤 잘 알고 있네! 👏" :
+    score >= 4 ? "좋아! 조금만 더 알아보자! 😊" : "다시 도전해 봐! 💪";
+  document.getElementById("feedback").innerHTML = details;
+  document.getElementById("result").style.display = "block";
+  document.getElementById("result").scrollIntoView({behavior: "smooth", block: "center"});
+  document.getElementById("grade").disabled = true;
+});
+
+document.getElementById("reset").addEventListener("click", () => {
+  document.getElementById("quiz").reset();
+  document.querySelectorAll(".question input").forEach(input => input.disabled = false);
+  document.getElementById("grade").disabled = false;
+  document.getElementById("result").style.display = "none";
+  document.getElementById("feedback").innerHTML = "";
+  window.scrollTo({top: 0, behavior: "smooth"});
+});
+</script>
+</body>
+</html>

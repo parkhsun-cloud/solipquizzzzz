@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>백인서 탐구 영역 - 퀴즈 게임</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Gothic A1', sans-serif;
+            background-color: #f0f4f8;
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+
+        @keyframes bounce-slow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .animate-bounce-slow {
+            animation: bounce-slow 2.5s infinite ease-in-out;
+        }
+
+        @keyframes pop-in {
+            0% { transform: scale(0.85); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop-in {
+            animation: pop-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 text-slate-800 relative">
+
+    <div class="w-full max-w-md glass-card rounded-3xl shadow-2xl overflow-hidden border-4 border-slate-100 min-h-[640px] flex flex-col justify-between relative transition-all duration-300">
+        
+        <!-- Score Bar (Top Right) & Progress Indicator -->
+        <div id="top-bar" class="hidden absolute top-4 left-4 right-4 z-10 flex items-center justify-between">
+            <span id="question-progress-badge" class="bg-indigo-100 text-indigo-700 font-extrabold text-xs px-3 py-1.5 rounded-full border border-indigo-200">
+                Q 1 / 10
+            </span>
+            <div class="bg-amber-50 border-2 border-amber-200 px-3 py-1 rounded-full flex items-center space-x-1.5 shadow-sm">
+                <i class="fa-solid fa-star text-amber-400"></i>
+                <span class="text-xs font-bold text-amber-800">맞힌 개수:</span>
+                <span id="current-score" class="text-sm font-black text-amber-900">0</span>
+            </div>
+        </div>
+
+        <!-- Progress Bar Track -->
+        <div id="progress-container" class="hidden w-full bg-slate-100 h-2.5">
+            <div id="progress-bar" class="bg-gradient-to-r from-blue-500 to-indigo-600 h-2.5 transition-all duration-300 rounded-r-full" style="width: 10%"></div>
+        </div>
+
+        <!-- SCREEN 1: COVER / START SCREEN -->
+        <div id="screen-cover" class="p-6 flex flex-col items-center justify-between flex-grow text-center my-auto">
+            <div class="mt-2">
+                <span class="inline-block bg-indigo-100 text-indigo-700 font-extrabold text-xs px-3 py-1 rounded-full mb-2 uppercase tracking-widest border border-indigo-200">
+                    Official 10-Question Quiz
+                </span>
+                <h1 class="text-3xl font-black text-slate-800 tracking-tight">
+                    <span class="text-gradient">백인서</span> 탐구 영역
+                </h1>
+                <p class="text-sm text-slate-500 mt-1 font-semibold">백인서의 모든 것을 파헤쳐보자!</p>
+            </div>
+
+            <!-- Male Character Illustration (SVG) -->
+            <div class="my-4 relative animate-bounce-slow">
+                <div class="w-40 h-40 bg-gradient-to-tr from-blue-100 via-indigo-100 to-purple-100 rounded-full flex items-center justify-center border-4 border-indigo-200 shadow-inner">
+                    <svg class="w-32 h-32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22 45C22 22 78 22 78 45" stroke="#1E293B" stroke-width="20" stroke-linecap="round"/>
+                        <circle cx="50" cy="50" r="28" fill="#FFDFC4"/>
+                        <path d="M20 42C24 26 38 20 50 20C62 20 76 26 80 42C72 33 58 30 50 33C42 30 28 33 20 42Z" fill="#334155"/>
+                        <path d="M36 43C39 41 43 42 45 44" stroke="#1E293B" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M64 43C61 41 57 42 55 44" stroke="#1E293B" stroke-width="2" stroke-linecap="round"/>
+                        <circle cx="40" cy="50" r="3.5" fill="#0F172A"/>
+                        <circle cx="60" cy="50" r="3.5" fill="#0F172A"/>
+                        <circle cx="41.5" cy="48.5" r="1.2" fill="white"/>
+                        <circle cx="61.5" cy="48.5" r="1.2" fill="white"/>
+                        <circle cx="35" cy="55" r="3.5" fill="#FF8A8A" opacity="0.6"/>
+                        <circle cx="65" cy="55" r="3.5" fill="#FF8A8A" opacity="0.6"/>
+                        <path d="M43 58C43 58 46 63 50 63C54 63 57 58 57 58" stroke="#0F172A" stroke-width="2.5" stroke-linecap="round"/>
+                        <path d="M24 85C24 71 35 67 50 67C65 67 76 71 76 85" fill="#2563EB"/>
+                        <path d="M41 67L50 78L59 67" stroke="#1D4ED8" stroke-width="2.5"/>
+                    </svg>
+                </div>
+                <div class="absolute -bottom-1 -right-1 bg-amber-400 text-slate-900 font-black text-xs px-3 py-1 rounded-full shadow-md transform rotate-6 border-2 border-white">
+                    PRO 퀴저 🦦
+                </div>
+            </div>
+
+            <!-- Start & Download Buttons -->
+            <div class="w-full space-y-2.5">
+                <button onclick="startQuiz()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-lg py-3.5 px-6 rounded-2xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center space-x-2">
+                    <span>퀴즈 시작하기</span>
+                    <i class="fa-solid fa-arrow-right text-sm"></i>
+                </button>
+                <button onclick="downloadSelfHtml()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm py-3 px-6 rounded-xl shadow-md transition-all flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-download"></i>
+                    <span>HTML 파일 바로 다운로드</span>
+                </button>
+                <button onclick="copyLink()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs py-2.5 px-6 rounded-xl transition-all flex items-center justify-center space-x-2 border border-slate-200">
+                    <i class="fa-solid fa-link"></i>
+                    <span>퀴즈 링크 복사하기</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- SCREEN 2: QUIZ CARD SCREEN -->
+        <div id="screen-quiz" class="hidden p-6 flex flex-col justify-between flex-grow mt-10">
+            <div>
+                <!-- Question Title -->
+                <div class="mb-4">
+                    <h2 id="question-text" class="text-lg font-extrabold text-slate-800 leading-snug pt-2">
+                        질문 내용이 여기에 들어갑니다.
+                    </h2>
+                </div>
+
+                <!-- 4 Option Buttons -->
+                <div id="options-container" class="space-y-3 mt-6">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+
+            <div class="text-center mt-6">
+                <p class="text-xs text-slate-400 font-semibold">정답이라고 생각되는 번호를 터치하세요!</p>
+            </div>
+        </div>
+
+        <!-- SCREEN 3: RESULT SCREEN -->
+        <div id="screen-result" class="hidden p-6 flex flex-col items-center justify-between flex-grow text-center animate-pop-in">
+            <div class="mt-2 w-full">
+                <div class="text-amber-400 text-5xl mb-2">
+                    <i class="fa-solid fa-trophy animate-bounce"></i>
+                </div>
+                <h2 class="text-2xl font-black text-slate-800">최종 결과</h2>
+                <p class="text-xs text-slate-500 font-semibold mt-1">백인서에 대한 나의 지식 지수는?</p>
+
+                <!-- Final Score Display -->
+                <div class="my-5 bg-gradient-to-br from-indigo-600 to-blue-700 text-white p-6 rounded-3xl shadow-xl relative overflow-hidden">
+                    <div class="absolute -right-4 -bottom-4 w-28 h-28 bg-white opacity-10 rounded-full"></div>
+                    
+                    <p class="text-xs font-semibold opacity-90 uppercase tracking-wider">맞힌 문제 개수</p>
+                    <div class="text-5xl font-black my-2 tracking-tight">
+                        <span id="final-score" class="text-amber-300">0</span>
+                        <span class="text-2xl font-bold opacity-80">/ 10</span>
+                    </div>
+                    <p id="score-comment" class="text-xs font-medium text-indigo-100">수고하셨습니다!</p>
+                </div>
+
+                <!-- Badge / Title -->
+                <div class="bg-slate-50 border-2 border-slate-200 rounded-2xl p-4 shadow-sm mb-4">
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">획득한 칭호</p>
+                    <p id="user-title" class="text-base sm:text-lg font-black text-indigo-700">
+                        칭호명
+                    </p>
+                </div>
+            </div>
+
+            <!-- Share & Action Buttons -->
+            <div class="w-full space-y-2 mb-2">
+                <button onclick="downloadSelfHtml()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm py-3 px-6 rounded-xl shadow-md transition-all flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-download"></i>
+                    <span>HTML 파일 다운로드</span>
+                </button>
+                <button onclick="copyLink()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-sm py-3 px-6 rounded-xl shadow-md transition-all flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-share-nodes"></i>
+                    <span>퀴즈 링크 복사하기</span>
+                </button>
+                <button onclick="restartQuiz()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs py-2.5 px-6 rounded-xl border border-slate-200 transition-all flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span>다시 풀기</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- MODAL / FEEDBACK OVERLAY -->
+        <div id="feedback-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl max-w-xs w-full p-6 text-center shadow-2xl transform transition-all animate-pop-in">
+                <div id="feedback-icon-bg" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+                    <i id="feedback-icon" class="fa-solid"></i>
+                </div>
+                <h3 id="feedback-title" class="text-2xl font-black text-slate-800 mb-2">
+                    정말 똑띠네요!
+                </h3>
+                <p id="feedback-desc" class="text-sm text-slate-600 font-semibold mb-6">
+                    <!-- Dynamic text -->
+                </p>
+                <button onclick="nextQuestion()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-md transition-all">
+                    다음 문제로 <i class="fa-solid fa-arrow-right ml-1"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- TOAST NOTIFICATION -->
+        <div id="toast" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-slate-900/90 text-white font-bold text-xs px-5 py-3 rounded-full shadow-2xl z-50 flex items-center space-x-2 opacity-0 pointer-events-none transition-all duration-300">
+            <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+            <span id="toast-message">알림 메시지</span>
+        </div>
+
+    </div>
+
+    <script>
+        // 10 Quiz Questions
+        const questions = [
+            {
+                question: "1. 백인서가 가장 좋아하는 동물은 무엇일까요?",
+                options: ["퐝트리아", "뇨트리아", "뉴트리아", "누트리아"],
+                answer: 3
+            },
+            {
+                question: "2. 백인서가 가장 먹어보고 싶은 음식은 무엇일까요?",
+                options: ["랍스타", "캐비어", "깔@롬 쌈@뽕 미디움 레어 와규 스테이크", "뉴트리아"],
+                answer: 4
+            },
+            {
+                question: "3. 백인서가 가장 좋아하는 유튜버는 누구일까요?",
+                options: ["헌터퐝", "아이쇼 스피드", "미스터 비스트", "슈뻘맨"],
+                answer: 1
+            },
+            {
+                question: "4. 백인서가 가장 싫어하는 음식은 무엇일까요?",
+                options: ["두리안", "취두부", "뉴트리아똥", "없음"],
+                answer: 2
+            },
+            {
+                question: "5. 백인서가 가장 싫어하는 정치 인물은 무엇 일까요?",
+                options: ["김정은", "트럼프", "시진핑", "푸틴"],
+                answer: 1
+            },
+            {
+                question: "6. 백인서가 가장 좋아하는 드라마는 무엇일까요?",
+                options: ["폭군의 셰프", "취사병,전설이 되다", "이태원 클라스", "오징어 게임"],
+                answer: 3
+            },
+            {
+                question: "7. 백인서가 가장 즐겨 하는 취미는 무엇일까요?",
+                options: ["유튜브 시청", "뉴트리아 사냥", "야간 산책", "게임하기"],
+                answer: 1
+            },
+            {
+                question: "8. 백인서의 MBTI는 무엇일까요?",
+                options: ["ENFP", "ISTP", "INTP", "ENTP"],
+                answer: 1
+            },
+            {
+                question: "9. 백인서가 주말에 가장 가고 싶어하는 곳은?",
+                options: ["집 침대", "PC방", "무인도", "놀이공원"],
+                answer: 1
+            },
+            {
+                question: "10. 백인서에 대해 가장 잘 표현한 한 마디는?",
+                options: ["엉뚱한 천재", "조용한 관찰자", "열정 넘치는 도전자", "뉴트리아 마스터"],
+                answer: 1
+            }
+        ];
+
+        // State variables
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        // UI References
+        const screenCover = document.getElementById('screen-cover');
+        const screenQuiz = document.getElementById('screen-quiz');
+        const screenResult = document.getElementById('screen-result');
+        const topBar = document.getElementById('top-bar');
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+        const questionProgressBadge = document.getElementById('question-progress-badge');
+        const currentScoreEl = document.getElementById('current-score');
+
+        const questionTextEl = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+
+        const feedbackModal = document.getElementById('feedback-modal');
+        const feedbackIconBg = document.getElementById('feedback-icon-bg');
+        const feedbackIcon = document.getElementById('feedback-icon');
+        const feedbackTitle = document.getElementById('feedback-title');
+        const feedbackDesc = document.getElementById('feedback-desc');
+
+        const finalScoreEl = document.getElementById('final-score');
+        const userTitleEl = document.getElementById('user-title');
+        const scoreCommentEl = document.getElementById('score-comment');
+
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            updateScoreUI();
+
+            screenCover.classList.add('hidden');
+            screenResult.classList.add('hidden');
+            screenQuiz.classList.remove('hidden');
+            topBar.classList.remove('hidden');
+            progressContainer.classList.remove('hidden');
+
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const currentQ = questions[currentQuestionIndex];
+
+            const progressPercent = ((currentQuestionIndex + 1) / questions.length) * 100;
+            progressBar.style.width = `${progressPercent}%`;
+            questionProgressBadge.textContent = `Q ${currentQuestionIndex + 1} / ${questions.length}`;
+            
+            questionTextEl.textContent = currentQ.question;
+            optionsContainer.innerHTML = '';
+
+            currentQ.options.forEach((optionText, idx) => {
+                const optionNum = idx + 1;
+                const button = document.createElement('button');
+                button.className = "w-full text-left bg-slate-50 hover:bg-indigo-50 border-2 border-slate-200 hover:border-indigo-400 p-3.5 rounded-2xl font-bold text-slate-700 transition-all flex items-center space-x-3 group transform hover:-translate-y-0.5 active:translate-y-0";
+                
+                button.innerHTML = `
+                    <span class="w-8 h-8 rounded-xl bg-white border-2 border-slate-200 group-hover:border-indigo-500 group-hover:bg-indigo-500 group-hover:text-white flex items-center justify-center font-extrabold text-xs text-slate-500 transition-colors">
+                        ${optionNum}
+                    </span>
+                    <span class="flex-1 text-sm sm:text-base leading-snug">${escapeHTML(optionText)}</span>
+                `;
+
+                button.onclick = () => handleAnswerSelect(optionNum);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function handleAnswerSelect(selectedOptionNum) {
+            const currentQ = questions[currentQuestionIndex];
+            const isCorrect = selectedOptionNum === currentQ.answer;
+
+            if (isCorrect) {
+                score++;
+                updateScoreUI();
+                showFeedback(true, currentQ);
+            } else {
+                showFeedback(false, currentQ);
+            }
+        }
+
+        function showFeedback(isCorrect, currentQ) {
+            if (isCorrect) {
+                feedbackIconBg.className = "w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl bg-emerald-100 text-emerald-500";
+                feedbackIcon.className = "fa-solid fa-circle-check";
+                feedbackTitle.textContent = "정말 똑띠네요!";
+                feedbackTitle.className = "text-2xl font-black text-emerald-600 mb-2";
+                feedbackDesc.textContent = "정답입니다! 완벽하게 맞히셨군요 👏";
+            } else {
+                feedbackIconBg.className = "w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl bg-rose-100 text-rose-500";
+                feedbackIcon.className = "fa-solid fa-circle-xmark";
+                feedbackTitle.textContent = "아쉽네요ㅠㅠ";
+                feedbackTitle.className = "text-2xl font-black text-rose-600 mb-2";
+                
+                const correctAnswerText = currentQ.options[currentQ.answer - 1];
+                feedbackDesc.innerHTML = `정답은 <span class="font-black text-indigo-600">${currentQ.answer}번 (${escapeHTML(correctAnswerText)})</span> 입니다!`;
+            }
+
+            feedbackModal.classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            feedbackModal.classList.add('hidden');
+            currentQuestionIndex++;
+
+            if (currentQuestionIndex < questions.length) {
+                renderQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            screenQuiz.classList.add('hidden');
+            topBar.classList.add('hidden');
+            progressContainer.classList.add('hidden');
+            screenResult.classList.remove('hidden');
+
+            finalScoreEl.textContent = score;
+
+            let title = "";
+            let comment = "";
+
+            if (score === 10) {
+                title = "🧠 백인서 뇌 속 사시는 분";
+                comment = "전설의 백인서 마스터! 모르는 게 없으시네요!";
+                triggerConfetti();
+            } else if (score >= 8) {
+                title = "🤝 백인서 짱친";
+                comment = "백인서와 엄청 가까운 사이군요!";
+                triggerConfetti();
+            } else if (score >= 5) {
+                title = "🙂 아는 사이";
+                comment = "기본적인 정보는 꽤 알고 계시네요!";
+            } else if (score >= 1) {
+                title = "🙋‍♂️ 스쳐간 인연";
+                comment = "조금 더 대화를 많이 나눠보세요!";
+            } else {
+                title = "❓ 누구세요?";
+                comment = "오늘부터 백인서와 친해져 보세요!";
+            }
+
+            userTitleEl.textContent = title;
+            scoreCommentEl.textContent = comment;
+        }
+
+        function triggerConfetti() {
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+            }
+        }
+
+        function restartQuiz() {
+            screenResult.classList.add('hidden');
+            screenCover.classList.remove('hidden');
+        }
+
+        function updateScoreUI() {
+            currentScoreEl.textContent = score;
+        }
+
+        // Direct Download Self HTML File
+        function downloadSelfHtml() {
+            const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+            const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'baek_inseof_quiz.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showToast("파일이 다운로드 되었습니다!");
+        }
+
+        function copyLink() {
+            const currentUrl = window.location.href;
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(currentUrl).then(() => {
+                    showToast("링크가 복사되었습니다!");
+                }).catch(() => {
+                    fallbackCopy(currentUrl);
+                });
+            } else {
+                fallbackCopy(currentUrl);
+            }
+        }
+
+        function fallbackCopy(text) {
+            const textarea = document.createElement("textarea");
+            textarea.value = text;
+            textarea.style.position = "fixed";
+            textarea.style.opacity = "0";
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand("copy");
+                showToast("링크가 복사되었습니다!");
+            } catch (err) {
+                showToast("복사에 실패했습니다.");
+            }
+            document.body.removeChild(textarea);
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            toastMsg.textContent = msg;
+            
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            toast.classList.add('opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0', 'pointer-events-none');
+            }, 2500);
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    "'": '&#39;',
+                    '"': '&quot;'
+                }[tag] || tag)
+            );
+        }
+    </script>
+</body>
+</html>

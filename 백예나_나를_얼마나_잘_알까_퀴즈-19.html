@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>예나의 예나의 나를 얼마나 잘 알까? 퀴즈 💗</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:"Arial","Noto Sans KR",sans-serif;
+  background:linear-gradient(#bde9ff 0%,#e8f8ff 58%,#8bd47d 58%,#62b85c 100%);
+  min-height:100vh;color:#243447;
+}
+.cloud{position:fixed;font-size:55px;opacity:.8;animation:move 18s linear infinite;z-index:0}
+.cloud.c1{top:35px;left:4%}.cloud.c2{top:105px;right:5%;animation-duration:24s}
+@keyframes move{50%{transform:translateX(35px)}}
+.wrap{position:relative;z-index:1;max-width:850px;margin:auto;padding:25px 16px 45px}
+.school{
+  background:#fff;border:5px solid #4d83b8;border-radius:28px;
+  padding:15px;text-align:center;box-shadow:0 8px 0 #32628e;margin-bottom:18px
+}
+.school .roof{font-size:50px;line-height:1}
+.school h1{margin:5px 0;color:#245a91;font-size:30px}
+.school p{margin:0;font-weight:bold;color:#54708b}
+.card{
+  background:rgba(255,255,255,.97);border-radius:28px;padding:25px;
+  box-shadow:0 10px 25px rgba(55,91,120,.22);border:3px solid #d5eafa
+}
+.top{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+.badge{background:#e7f4ff;color:#28669d;padding:9px 15px;border-radius:999px;font-weight:bold}
+.score{background:#fff1a8;color:#765d00;padding:9px 15px;border-radius:999px;font-weight:bold}
+.progress{height:13px;background:#e6eef4;border-radius:20px;overflow:hidden;margin:18px 0 24px}
+.bar{height:100%;background:#55b7ed;width:10%;transition:.3s}
+.question{font-size:25px;font-weight:800;text-align:center;margin:18px 0 25px;line-height:1.45}
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.answer{
+  border:3px solid #cfe1ef;background:#f8fcff;border-radius:18px;
+  padding:17px 15px;font-size:17px;font-weight:bold;cursor:pointer;
+  transition:.15s;min-height:65px
+}
+.answer:hover{transform:translateY(-2px);background:#edf8ff}
+.answer:disabled{cursor:default}
+.answer.correct{background:#d9f7df;border-color:#43b85c;color:#207b35}
+.answer.wrong{background:#ffe0e0;border-color:#e35a5a;color:#a62929}
+.feedback{text-align:center;min-height:68px;margin-top:18px;font-size:23px;font-weight:900}
+.feedback small{display:block;font-size:14px;margin-top:5px;color:#657786}
+.next,.restart{
+  display:block;margin:5px auto 0;border:0;border-radius:18px;
+  padding:14px 30px;background:#4d9fe0;color:white;font-size:18px;
+  font-weight:900;cursor:pointer;box-shadow:0 5px 0 #3477ad
+}
+.next:active,.restart:active{transform:translateY(3px);box-shadow:0 2px 0 #3477ad}
+.result{text-align:center}
+.result .big{font-size:65px;margin:8px}
+.result h2{font-size:30px;color:#245a91}
+.result p{font-size:20px;font-weight:bold}
+.hidden{display:none}
+.footer{text-align:center;margin-top:18px;color:#315d3c;font-weight:bold}
+@media(max-width:600px){
+ .wrap{padding:15px 10px 30px}.school h1{font-size:24px}.school .roof{font-size:40px}
+ .card{padding:18px}.answers{grid-template-columns:1fr}
+ .question{font-size:21px}.answer{padding:15px}
+}
+
+.character{
+  position:fixed;
+  right:22px;
+  bottom:12px;
+  z-index:2;
+  width:105px;
+  text-align:center;
+  animation:bob 2.2s ease-in-out infinite;
+  pointer-events:none;
+}
+.character .bubble{
+  background:white;
+  border:3px solid #6aa9d8;
+  border-radius:18px;
+  padding:6px 9px;
+  font-size:13px;
+  font-weight:900;
+  color:#356b98;
+  box-shadow:0 4px 0 rgba(53,107,152,.18);
+  margin-bottom:3px;
+}
+.character .girl{
+  font-size:68px;
+  line-height:1;
+  filter:drop-shadow(0 4px 2px rgba(0,0,0,.12));
+}
+@keyframes bob{
+  50%{transform:translateY(-7px)}
+}
+@media(max-width:600px){
+  .character{right:6px;bottom:5px;transform:scale(.78);transform-origin:bottom right}
+}
+
+.name-badge{
+  display:inline-block;
+  margin:4px auto 10px;
+  padding:7px 15px;
+  background:#fff;
+  color:#6b5ca5;
+  border:3px solid #d8c9ff;
+  border-radius:20px;
+  font-size:15px;
+  font-weight:900;
+  box-shadow:0 3px 0 rgba(107,92,165,.12);
+}
+</style>
+</head>
+<body>
+<div class="name-badge">💗 예나의 퀴즈 💗</div>
+<div class="cloud c1">☁️</div><div class="cloud c2">☁️</div>
+<div class="character">
+  <div class="bubble">파이팅! 💕</div>
+  <div class="girl">👧🏻</div>
+</div>
+
+
+<div class="wrap">
+  <div class="school">
+    <div class="roof">🏫</div>
+    <h1>대구강북초등학교</h1>
+    <p>🌳 예나의 나를 얼마나 잘 알까? 퀴즈 🌳</p>
+  </div>
+
+  <div class="card" id="quizCard">
+    <div class="top">
+      <div class="badge" id="number">1 / 10</div>
+      <div class="score">⭐ 맞힌 개수: <span id="score">0</span></div>
+    </div>
+    <div class="progress"><div class="bar" id="bar"></div></div>
+    <div class="question" id="question"></div>
+    <div class="answers" id="answers"></div>
+    <div class="feedback" id="feedback"></div>
+    <button class="next hidden" id="next">다음 문제 ➜</button>
+  </div>
+
+  <div class="card result hidden" id="resultCard">
+    <div class="big">🎉</div>
+    <h2>퀴즈 끝!</h2>
+    <p id="resultText"></p>
+    <p>🏫 대구강북초등학교에서<br>나에 대해 얼마나 잘 알고 있었을까?</p>
+    <button class="restart" onclick="restart()">🔄 다시 하기</button>
+  </div>
+
+  <div class="footer">🌱 즐겁게 풀어보세요! 🌱</div>
+</div>
+
+<script>
+const questions = [
+ {q:"내가 가장 좋아하는 아이돌은?", a:["아이브","보넥도","하츠투하츠","투바투"], correct:1},
+ {q:"내가 가장 좋아하는 색깔은?", a:["하양","검정","회색","연보라"], correct:0},
+ {q:"내가 쉬는시간에 가장 하고 싶은 것은?", a:["친구와 이야기하기","책상에 앉아서 쉬기","그림 그리기","운동 하기"], correct:0},
+ {q:"나에게는 형제자매 중 누가 있을까?", a:["여동생","남동생","언니","오빠"], correct:2},
+ {q:"내가 가장 좋아하는 계절은?", a:["봄","여름","가을","겨울"], correct:2},
+ {q:"내가 가장 좋아하는 동물은?", a:["토끼","강아지","고양이","햄스터"], correct:1},
+ {q:"내가 가장 좋아하는 것은?", a:["친구들과 놀기","혼자 쉬기","새로운 것 만들기","맛있는 것 먹기"], correct:0},
+ {q:"내가 가장 좋아하는 학교 활동은?", a:["체육 활동","미술 활동","모둠 활동","발표하기"], correct:0},
+ {q:"내가 가장 좋아하는 음료는?", a:["우유","탄산음료","버블티","이온음료"], correct:3},
+ {q:"내가 가장 좋아하는 날은 언제일까?", a:["월요일","수요일","금요일","토요일"], correct:3},
+ {q:"내가 가장 좋아하는 과목은 무엇일까?", a:["영어","과학","미술","체육"], correct:3}
+];
+
+let current=0, score=0, answered=false;
+
+const $=id=>document.getElementById(id);
+
+function loadQuestion(){
+  answered=false;
+  const item=questions[current];
+  $("number").textContent=`${current+1} / ${questions.length}`;
+  $("score").textContent=score;
+  $("bar").style.width=((current+1)/questions.length*100)+"%";
+  $("question").textContent=item.q;
+  $("feedback").innerHTML="";
+  $("next").classList.add("hidden");
+
+  const box=$("answers");
+  box.innerHTML="";
+  item.a.forEach((text,i)=>{
+    const btn=document.createElement("button");
+    btn.className="answer";
+    btn.textContent=`${i+1}. ${text}`;
+    btn.onclick=()=>choose(i,btn);
+    box.appendChild(btn);
+  });
+}
+
+function choose(index,clicked){
+  if(answered)return;
+  answered=true;
+  const item=questions[current];
+  const buttons=[...$("answers").children];
+
+  buttons.forEach((b,i)=>{
+    b.disabled=true;
+    if(i===item.correct)b.classList.add("correct");
+  });
+
+  if(index===item.correct){
+    score++;
+    clicked.classList.add("correct");
+    $("feedback").innerHTML="🎉 정답!<small>정말 잘 알고 있네!</small>";
+  }else{
+    clicked.classList.add("wrong");
+    $("feedback").innerHTML="😢 아쉬워요<small>정답은 "+(item.correct+1)+"번이에요!</small>";
+  }
+  $("score").textContent=score;
+  $("next").textContent=current===questions.length-1?"결과 보기 🏆":"다음 문제 ➜";
+  $("next").classList.remove("hidden");
+}
+
+$("next").onclick=()=>{
+  if(!answered)return;
+  current++;
+  if(current<questions.length) loadQuestion();
+  else showResult();
+};
+
+function showResult(){
+  $("quizCard").classList.add("hidden");
+  $("resultCard").classList.remove("hidden");
+  let msg="";
+  if(score===11) msg="🏆 완벽해! 나를 정말 잘 알고 있네!";
+  else if(score>=9) msg="🌟 대단해! 나에 대해 정말 잘 알고 있어!";
+  else if(score>=6) msg="😊 잘했어! 조금만 더 알면 완벽해!";
+  else msg="💪 아쉬워요! 다시 도전해보자!";
+  $("resultText").innerHTML=`총 <b>${score} / 11</b>개를 맞혔어요!<br>${msg}`;
+}
+
+function restart(){
+  current=0;score=0;
+  $("resultCard").classList.add("hidden");
+  $("quizCard").classList.remove("hidden");
+  loadQuestion();
+}
+
+loadQuestion();
+</script>
+</body>
+</html>

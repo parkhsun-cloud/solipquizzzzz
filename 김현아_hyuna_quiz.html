@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>현아에 대한 퀴즈! (나를 맞혀봐)</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+      background-color: #fff0f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    .quiz-card {
+      background: #fff;
+      border-radius: 24px;
+      padding: 30px 24px;
+      max-width: 450px;
+      width: 100%;
+      box-shadow: 0 10px 25px rgba(255,182,193,.5);
+      border: 3px solid #ffb6c1;
+      text-align: center;
+    }
+    h1 { color:#ff69b4; font-size:24px; margin:10px 0 20px; }
+    .avatar-box {
+      width:120px; height:120px; background:#ffe4e1; border-radius:50%;
+      display:flex; justify-content:center; align-items:center; font-size:60px;
+      margin:0 auto 15px; border:4px solid #ffb6c1;
+      box-shadow:0 4px 10px rgba(255,182,193,.4);
+    }
+    .start-desc { color:#666; font-size:15px; margin-bottom:20px; line-height:1.5; }
+    .nickname-input {
+      width:80%; padding:12px 16px; border:2px solid #ffb6c1;
+      border-radius:15px; font-size:16px; outline:none; text-align:center; margin-bottom:20px;
+    }
+    .nickname-input:focus { border-color:#ff69b4; }
+    .btn-group { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+    .main-start-btn, .rank-view-btn, .next-btn {
+      padding:14px 28px; border-radius:30px; font-size:16px; font-weight:bold; cursor:pointer;
+    }
+    .main-start-btn {
+      background:#ff69b4; color:#fff; border:none;
+      box-shadow:0 4px 12px rgba(255,105,180,.4);
+      transition:transform .2s;
+    }
+    .main-start-btn:hover { transform:scale(1.05); background:#ff1493; }
+    .rank-view-btn {
+      padding:14px 20px; background:#fff; color:#ff69b4;
+      border:2px solid #ff69b4; transition:transform .2s;
+    }
+    .rank-view-btn:hover { transform:scale(1.05); background:#ffe4e1; }
+    .question-hint {
+      background:#fff0f5; color:#ff1493; font-weight:bold; font-size:16px;
+      padding:8px 16px; border-radius:15px; display:inline-block;
+      margin-bottom:15px; border:1px dashed #ffb6c1;
+    }
+    .question-title { font-size:19px; font-weight:bold; color:#333; margin-bottom:20px; line-height:1.4; }
+    .options { display:flex; flex-direction:column; gap:12px; }
+    .options-ox { display:flex; justify-content:center; gap:20px; margin-top:10px; }
+    .btn {
+      padding:14px 20px; border:2px solid #ffb6c1; background:#fff;
+      border-radius:14px; font-size:16px; font-weight:bold; color:#444;
+      cursor:pointer; transition:all .2s ease;
+    }
+    .btn:hover:not(:disabled) { background:#ffe4e1; border-color:#ff69b4; }
+    .btn:disabled { cursor:default; opacity:.65; }
+    .btn-ox { width:110px; height:110px; font-size:40px; border-radius:50%; }
+    .result-message { margin-top:20px; font-size:20px; font-weight:bold; min-height:40px; }
+    .next-btn {
+      margin-top:20px; background:#ff69b4; color:#fff; border:none; display:none;
+    }
+    .rank-list { list-style:none; padding:0; margin:20px 0; max-height:250px; overflow-y:auto; }
+    .rank-item {
+      display:flex; justify-content:space-between; align-items:center;
+      padding:12px 16px; background:#fff0f5; border-radius:12px;
+      margin-bottom:8px; font-weight:bold; color:#444;
+    }
+    .rank-badge { font-size:18px; width:30px; text-align:left; }
+    .rank-name { flex-grow:1; text-align:left; margin-left:10px; }
+    .rank-score { color:#ff1493; }
+    .score-big { font-size:42px; font-weight:bold; color:#ff1493; margin:20px 0; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+<body>
+<div class="quiz-card">
+  <div id="start-screen">
+    <h1>🎀 현아 퀴즈 🎀</h1>
+    <div class="avatar-box">🐰</div>
+    <p class="start-desc">안녕! 나는 단발머리 현아야!<br>닉네임을 적고 퀴즈를 풀어봐!</p>
+    <input type="text" id="nickname" class="nickname-input" placeholder="닉네임을 입력하세요!" maxlength="8">
+    <div class="btn-group">
+      <button class="main-start-btn" onclick="startQuiz()">시작하기 🚀</button>
+      <button class="rank-view-btn" onclick="showRanking()">🏆 랭킹</button>
+    </div>
+  </div>
+
+  <div id="quiz-screen" style="display:none;">
+    <div id="hint-container"></div>
+    <div id="question" class="question-title"></div>
+    <div id="options" class="options"></div>
+    <div id="result" class="result-message"></div>
+    <button id="next-btn" class="next-btn" onclick="nextQuestion()">다음 문제 보기 ▶</button>
+  </div>
+
+  <div id="rank-screen" style="display:none;">
+    <h1>🏆 명예의 전당 🏆</h1>
+    <ul id="rank-list" class="rank-list"></ul>
+    <button class="main-start-btn" onclick="showStartScreen()">처음으로 돌아가기 🏠</button>
+  </div>
+</div>
+
+<script>
+const questions = [
+  {type:'choice', title:'문제 1. 내가 제일 좋아하는 해산물은?', options:['1. 연어','2. 광어','3. 문어','4. 참치'], answer:0},
+  {type:'choice', title:'문제 2. 나의 생일은?', options:['1. 11.9','2. 9.12','3. 9.11','4. 9.10'], answer:2},
+  {type:'choice', title:'문제 3. 내가 제일 싫어하는 과목은?', options:['1. 수학','2. 영어','3. 과학','4. 사회'], answer:1},
+  {type:'choice', hint:'💡 이번엔 좀 쉬워~!', title:'문제 4. 내가 제일 좋아하는 활동은?', options:['1. 배구','2. 배드민턴','3. 훌라후프','4. 피구'], answer:3},
+  {type:'ox', title:'문제 5. [O/X] 현아는 갤럭시를 쓴다!', answer:'O'},
+  {type:'ox', title:'문제 6. [O/X] 현아는 오이를 좋아한다!', answer:'O'},
+  {type:'ox', title:'문제 7. [O/X] 현아는 민트초코를 좋아한다!', answer:'X'},
+  {type:'ox', title:'문제 8. [O/X] 현아는 MBTI가 N이다!', answer:'O'}
+];
+
+let currentIdx=0, score=0, userNickname='';
+
+function startQuiz(){
+  const input=document.getElementById('nickname').value.trim();
+  if(!input){ alert('닉네임을 입력해 주세요!'); return; }
+  userNickname=input; currentIdx=0; score=0;
+  document.getElementById('start-screen').style.display='none';
+  document.getElementById('rank-screen').style.display='none';
+  document.getElementById('quiz-screen').style.display='block';
+  loadQuestion();
+}
+
+function loadQuestion(){
+  const q=questions[currentIdx];
+  document.getElementById('hint-container').innerHTML=q.hint?`<div class="question-hint">${q.hint}</div>`:'';
+  document.getElementById('question').innerText=q.title;
+  document.getElementById('result').innerText='';
+  document.getElementById('next-btn').style.display='none';
+  const optionsDiv=document.getElementById('options');
+  optionsDiv.innerHTML='';
+  if(q.type==='choice'){
+    optionsDiv.className='options';
+    q.options.forEach((opt,idx)=>{
+      const btn=document.createElement('button');
+      btn.className='btn'; btn.innerText=opt; btn.onclick=()=>checkAnswer(idx);
+      optionsDiv.appendChild(btn);
+    });
+  } else {
+    optionsDiv.className='options-ox';
+    ['O','X'].forEach(ox=>{
+      const btn=document.createElement('button');
+      btn.className='btn btn-ox'; btn.innerText=ox; btn.onclick=()=>checkAnswer(ox);
+      optionsDiv.appendChild(btn);
+    });
+  }
+}
+
+function checkAnswer(userAnswer){
+  const q=questions[currentIdx], resultDiv=document.getElementById('result');
+  document.querySelectorAll('#options button').forEach(btn=>btn.disabled=true);
+  if(userAnswer===q.answer){
+    score++; resultDiv.style.color='#ff1493'; resultDiv.innerText='🎉 축하해요!';
+    if(typeof confetti==='function') confetti({particleCount:100,spread:70,origin:{y:.6}});
+  } else {
+    resultDiv.style.color='#888'; resultDiv.innerText='아쉬워요ㅠㅠ 다음에 더 잘하면 돼요!';
+  }
+  document.getElementById('next-btn').style.display='inline-block';
+}
+
+function nextQuestion(){
+  currentIdx++;
+  if(currentIdx<questions.length) loadQuestion();
+  else finishQuiz();
+}
+
+function finishQuiz(){
+  document.getElementById('quiz-screen').innerHTML=`
+    <h1>🎉 퀴즈 완료! 🎉</h1>
+    <div class="avatar-box">🐰</div>
+    <p class="start-desc"><strong>${escapeHtml(userNickname)}</strong>님의 점수는</p>
+    <div class="score-big">${score} / ${questions.length}</div>
+    <p class="result-message">${getFinalMessage()}</p>
+    <div class="btn-group">
+      <button class="main-start-btn" onclick="saveAndShowRanking()">🏆 랭킹 등록</button>
+      <button class="rank-view-btn" onclick="showStartScreen()">🏠 처음으로</button>
+    </div>`;
+}
+
+function getFinalMessage(){
+  const p=score/questions.length*100;
+  if(p===100) return '💖 완벽해요! 현아에 대해 정말 잘 알고 있네요!';
+  if(p>=75) return '💕 대단해요! 현아를 꽤 잘 알고 있네요!';
+  if(p>=50) return '😊 절반 이상 맞혔어요! 조금만 더 공부해봐요!';
+  return '🥹 아쉬워요! 다음에는 더 많이 맞혀봐요!';
+}
+
+function saveAndShowRanking(){
+  const rankings=JSON.parse(localStorage.getItem('hyunaQuizRankings')||'[]');
+  rankings.push({name:userNickname,score:score,date:Date.now()});
+  rankings.sort((a,b)=>b.score-a.score || a.date-b.date);
+  localStorage.setItem('hyunaQuizRankings',JSON.stringify(rankings.slice(0,10)));
+  showRanking();
+}
+
+function showRanking(){
+  document.getElementById('start-screen').style.display='none';
+  document.getElementById('quiz-screen').style.display='none';
+  document.getElementById('rank-screen').style.display='block';
+  const list=document.getElementById('rank-list');
+  const rankings=JSON.parse(localStorage.getItem('hyunaQuizRankings')||'[]');
+  list.innerHTML='';
+  if(!rankings.length){
+    list.innerHTML='<li class="rank-item" style="justify-content:center;">아직 등록된 기록이 없어요! 🥺</li>';
+    return;
+  }
+  rankings.forEach((rank,index)=>{
+    const li=document.createElement('li'); li.className='rank-item';
+    const badge=index===0?'🥇':index===1?'🥈':index===2?'🥉':`${index+1}위`;
+    li.innerHTML=`<span class="rank-badge">${badge}</span><span class="rank-name">${escapeHtml(rank.name)}</span><span class="rank-score">${rank.score} / ${questions.length}</span>`;
+    list.appendChild(li);
+  });
+}
+
+function showStartScreen(){
+  document.getElementById('start-screen').style.display='block';
+  document.getElementById('quiz-screen').style.display='none';
+  document.getElementById('rank-screen').style.display='none';
+  document.getElementById('quiz-screen').innerHTML=`
+    <div id="hint-container"></div>
+    <div id="question" class="question-title"></div>
+    <div id="options" class="options"></div>
+    <div id="result" class="result-message"></div>
+    <button id="next-btn" class="next-btn" onclick="nextQuestion()">다음 문제 보기 ▶</button>`;
+}
+
+function escapeHtml(text){
+  const div=document.createElement('div'); div.textContent=text; return div.innerHTML;
+}
+</script>
+</body>
+</html>

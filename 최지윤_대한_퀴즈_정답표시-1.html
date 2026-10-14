@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>최지윤에 대한 퀴즈</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,"Noto Sans KR",sans-serif;background:linear-gradient(135deg,#ffe6f2,#e8e5ff);min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px}
+.game{width:min(680px,100%);background:white;border-radius:28px;padding:28px;box-shadow:0 12px 35px rgba(0,0,0,.12);text-align:center}
+h1{margin:5px 0 10px;font-size:30px}
+.progress{color:#777;margin-bottom:18px}
+.question{font-size:24px;font-weight:700;margin:20px 0}
+.choices{display:grid;gap:12px}
+button.choice{border:2px solid #e6e6e6;background:#fafafa;padding:15px;border-radius:16px;font-size:18px;cursor:pointer;transition:.15s}
+button.choice:hover{transform:translateY(-2px);background:#f3f0ff}
+button.choice:disabled{cursor:default}
+.feedback{min-height:55px;margin:18px 0 5px;font-size:21px;font-weight:800}
+.correct{color:#159447}.wrong{color:#e23b3b}
+.next,.restart{border:0;background:#7c5cff;color:white;padding:13px 28px;border-radius:14px;font-size:17px;font-weight:700;cursor:pointer;margin-top:8px}
+.next:hover,.restart:hover{background:#6848eb}
+.score{font-size:28px;font-weight:800;margin:20px 0}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<div class="game">
+
+<div id="intro">
+<h1>✨ 최지윤에 대한 퀴즈 ✨</h1>
+<p style="font-size:18px;color:#666;">최지윤에 대해 얼마나 알고 있을까요?</p>
+<button class="restart" onclick="startQuiz()">퀴즈 시작하기 🎮</button>
+</div>
+
+<div id="quiz" class="hidden">
+<div class="progress" id="progress"></div>
+<div class="question" id="question"></div>
+<div class="choices" id="choices"></div>
+<div class="feedback" id="feedback"></div>
+<button class="next hidden" id="next">다음 문제 ➜</button>
+</div>
+
+<div id="result" class="hidden">
+<h1>🎉 퀴즈 완료!</h1>
+<div class="score" id="score"></div>
+<div style="font-size:18px;color:#666;margin-bottom:12px;">최대점 = 35점</div>
+<button class="restart" onclick="restartQuiz()">다시 하기 🔄</button>
+</div>
+
+</div>
+
+<script>
+const questions=[
+{q:"최지윤의 생일은?",choices:["2월 5일","1월 16일","9월 5일","11월 16일","8월 15일"],answer:3},
+{q:"최지윤의 동생의 나이는?",choices:["2학년","3학년","4학년","5학년","1학년"],answer:1},
+{q:"최지윤이 제일 좋아하는 과일은?",choices:["딸기","바나나","두리안","망고","멜론"],answer:4},
+{q:"최지윤이 제일 좋아하는 음식은?",choices:["마라탕","파스타","치즈 떡볶이","콘치즈","비빔밥"],answer:2},
+{q:"최지윤이 제일 좋아하는 캐릭터는?",choices:["키티","마메치","구치파치","미미치","우사하나"],answer:2},
+{q:"최지윤이 제일 좋아하는 디저트는?",choices:["빵","마카롱","아이스크림","쿠키","푸딩"],answer:2},
+{q:"최지윤의 필통에 있는 샤프 개수는?",choices:["3개","4개","5개","6개","7개"],answer:4}
+];
+
+let current=0;
+let score=0;
+
+const questionEl=document.getElementById("question");
+const choicesEl=document.getElementById("choices");
+const feedbackEl=document.getElementById("feedback");
+const progressEl=document.getElementById("progress");
+const nextBtn=document.getElementById("next");
+const quizEl=document.getElementById("quiz");
+const introEl=document.getElementById("intro");
+const resultEl=document.getElementById("result");
+const scoreEl=document.getElementById("score");
+
+function showQuestion(){
+const item=questions[current];
+progressEl.textContent=`${current+1} / ${questions.length} 문제`;
+questionEl.textContent=item.q;
+choicesEl.innerHTML="";
+feedbackEl.textContent="";
+feedbackEl.className="feedback";
+nextBtn.classList.add("hidden");
+
+item.choices.forEach((choice,index)=>{
+const button=document.createElement("button");
+button.className="choice";
+button.textContent=`${index+1}️⃣ ${choice}`;
+button.onclick=()=>checkAnswer(index);
+choicesEl.appendChild(button);
+});
+}
+
+function checkAnswer(selected){
+const item=questions[current];
+document.querySelectorAll(".choice").forEach(btn=>btn.disabled=true);
+
+if(selected===item.answer){
+score++;
+feedbackEl.textContent="맞았어요! 🎉";
+feedbackEl.className="feedback correct";
+}else{
+feedbackEl.textContent=`틀렸어요!! ❌ 정답은 "${item.choices[item.answer]}"입니다!`;
+feedbackEl.className="feedback wrong";
+}
+
+nextBtn.classList.remove("hidden");
+}
+
+nextBtn.onclick=()=>{
+current++;
+if(current<questions.length){
+showQuestion();
+}else{
+quizEl.classList.add("hidden");
+resultEl.classList.remove("hidden");
+scoreEl.textContent=`${score*5}점`;
+}
+};
+
+function startQuiz(){
+current=0;
+score=0;
+introEl.classList.add("hidden");
+resultEl.classList.add("hidden");
+quizEl.classList.remove("hidden");
+showQuestion();
+}
+
+function restartQuiz(){
+startQuiz();
+}
+</script>
+</body>
+</html>

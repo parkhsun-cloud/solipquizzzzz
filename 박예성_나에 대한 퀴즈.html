@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>나에 대한 퀴즈</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&display=swap">
+<style>
+:root{--bg:#eef3fb;--card:#fff;--ink:#1f2a44;--sub:#5d6b8a;--line:#d5deef;--sun:#ffc933;--ok:#2e9e6b;--okbg:#e2f5ec;--no:#d93f45;--nobg:#fdeaea;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141b2d;--card:#1f2942;--ink:#f1f4fb;--sub:#a3b0cc;--line:#33415f;--okbg:#17382c;--nobg:#3d1f24;--ok:#4cc28b;--no:#ff7076}}
+:root[data-theme="dark"]{--bg:#141b2d;--card:#1f2942;--ink:#f1f4fb;--sub:#a3b0cc;--line:#33415f;--okbg:#17382c;--nobg:#3d1f24;--ok:#4cc28b;--no:#ff7076}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Jua","Apple SD Gothic Neo","Malgun Gothic",sans-serif;min-height:100vh;display:flex;justify-content:center;padding:20px 16px}
+main{width:100%;max-width:480px}
+h1{font-size:1.5rem;margin:8px 0 4px;font-weight:400}
+.sub{color:var(--sub);margin:0 0 20px}
+.bar{display:flex;gap:6px;margin-bottom:16px}
+.bar i{flex:1;height:8px;border-radius:4px;background:var(--line)}
+.bar i.on{background:var(--sun)}
+.card{background:var(--card);border-radius:20px;padding:22px 18px;box-shadow:0 2px 0 var(--line)}
+.q{font-size:1.4rem;line-height:1.4;margin:0 0 18px}
+.opts{display:grid;gap:10px}
+.opt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font:inherit;font-size:1.15rem;color:var(--ink);background:var(--card);border:2px solid var(--line);border-radius:14px;padding:14px;cursor:pointer;min-height:56px}
+.opt:focus-visible,.next:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.opt .n{width:28px;height:28px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-size:.95rem;flex:none}
+.opt .dot{width:22px;height:22px;border-radius:50%;border:2px solid rgba(0,0,0,.2);flex:none;margin-left:auto}
+.opt.ok{border-color:var(--ok);background:var(--okbg)}
+.opt.no{border-color:var(--no);background:var(--nobg)}
+.opt:disabled{cursor:default}
+.msg{min-height:1.6em;margin:16px 0 0;font-size:1.1rem}
+.next{display:none;margin-top:14px;width:100%;font:inherit;font-size:1.15rem;padding:14px;border:0;border-radius:14px;background:var(--sun);color:#1f2a44;cursor:pointer}
+.next.show{display:block}
+.score{font-size:3rem;margin:6px 0;text-align:center}
+.res{text-align:center}
+.res p{margin:6px 0 0}
+</style>
+</head>
+<body>
+<main>
+  <h1>나에 대한 퀴즈</h1>
+  <p class="sub">나를 얼마나 알고 있을까요?</p>
+  <div class="bar" id="bar"></div>
+  <section class="card" id="card" aria-live="polite"></section>
+</main>
+<script>
+var Q=[
+ {q:"내가 좋아하는 색은?",a:"노랑",o:["노랑","파랑","빨강","초록"],c:{"노랑":"#ffd400","파랑":"#2f6fed","빨강":"#e5484d","초록":"#2e9e6b"}},
+ {q:"내 생일은 언제일까?",a:"1월 1일",o:["1월 1일","2월 1일","3월 1일","4월 1일"]},
+ {q:"내가 좋아하는 동물은?",a:"수달",o:["수달","강아지","고양이","토끼"]},
+ {q:"학교 생활 6년 중 한 번도 안 간 반은?",a:"5반",o:["1반","3반","4반","5반"]},
+ {q:"내가 좋아하는 계절은?",a:"겨울",o:["봄","여름","가을","겨울"]}
+];
+var i=0,score=0,done=false;
+var card=document.getElementById("card"),bar=document.getElementById("bar");
+function shuffle(a){a=a.slice();for(var k=a.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1));var t=a[k];a[k]=a[j];a[j]=t}return a}
+function drawBar(){bar.innerHTML=Q.map(function(_,k){return '<i class="'+(k<=i?'on':'')+'"></i>'}).join("")}
+function show(){
+  var q=Q[i];done=false;drawBar();
+  card.innerHTML='<p class="q"></p><div class="opts"></div><p class="msg"></p><button class="next"></button>';
+  card.querySelector(".q").textContent=(i+1)+". "+q.q;
+  var box=card.querySelector(".opts");
+  shuffle(q.o).forEach(function(t,k){
+    var b=document.createElement("button");b.className="opt";
+    b.innerHTML='<span class="n">'+(k+1)+'</span><span></span>'+(q.c?'<span class="dot" style="background:'+q.c[t]+'"></span>':'');
+    b.children[1].textContent=t;
+    b.onclick=function(){pick(b,t)};
+    box.appendChild(b);
+  });
+}
+function pick(btn,t){
+  if(done)return;done=true;
+  var q=Q[i],ok=t===q.a;if(ok)score++;
+  card.querySelectorAll(".opt").forEach(function(b){
+    b.disabled=true;
+    if(b.children[1].textContent===q.a)b.classList.add("ok");
+  });
+  if(!ok)btn.classList.add("no");
+  var m=card.querySelector(".msg");
+  m.textContent=ok?"정답이에요!":"아쉬워요, 정답은 "+q.a+"!";
+  m.style.color=ok?"var(--ok)":"var(--no)";
+  var n=card.querySelector(".next");
+  n.textContent=i<Q.length-1?"다음 문제":"결과 보기";
+  n.className="next show";
+  n.onclick=function(){i++;if(i<Q.length)show();else result()};
+  n.focus();
+}
+function result(){
+  i=Q.length-1;drawBar();
+  var all=score===Q.length;
+  card.innerHTML='<div class="res"><div class="score"></div><p></p><button class="next show" style="margin-top:18px">다시 풀기</button></div>';
+  card.querySelector(".score").textContent=score+" / "+Q.length;
+  card.querySelector("p").textContent=all?"":"다시 도전해 볼까요?";
+  card.querySelector(".next").onclick=function(){i=0;score=0;show()};
+}
+show();
+</script>
+</body>
+</html>

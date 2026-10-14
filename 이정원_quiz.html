@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>나에 대한 퀴즈</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:#fff0f6;color:#3b2a35;font-family:"Jua","Apple SD Gothic Neo","Malgun Gothic",sans-serif;display:flex;justify-content:center}
+#app{width:100%;max-width:460px;padding:16px;text-align:center}
+h1{font-size:26px;margin:8px 0}
+.bubble{position:relative;background:#fff;border:3px solid #ff8fb8;border-radius:20px;padding:12px 16px;font-size:20px;margin:0 auto 14px;display:inline-block;max-width:92%}
+.bubble:after{content:"";position:absolute;bottom:-14px;left:50%;margin-left:-10px;border:10px solid transparent;border-top-color:#ff8fb8;border-bottom:0}
+svg.girl{width:150px;height:auto;display:block;margin:6px auto}
+input{font:inherit;font-size:18px;padding:10px 14px;border:3px solid #ffb3d1;border-radius:14px;width:80%;text-align:center;margin:8px 0}
+button{font:inherit;font-size:18px;cursor:pointer;border:0;border-radius:16px;padding:12px 18px;background:#ff6fa5;color:#fff;margin:6px 0}
+button:active{transform:scale(.97)}
+.opt{display:block;width:100%;background:#fff;color:#3b2a35;border:3px solid #ffb3d1;text-align:left}
+.opt.right{background:#c9f5d4;border-color:#3dbb64}
+.opt.wrong{background:#ffd3d3;border-color:#e5484d}
+.ox{display:flex;gap:12px}.ox .opt{text-align:center;font-size:42px}
+.q{font-size:21px;font-weight:bold;margin:6px 0 12px}
+.bar{height:10px;background:#ffd9e8;border-radius:6px;overflow:hidden;margin-bottom:10px}
+.bar i{display:block;height:100%;background:#ff6fa5;transition:width .3s}
+.fb{font-size:34px;font-weight:bold;margin:8px 0;min-height:44px}
+.ok{color:#2e9e57}.no{color:#e5484d}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;margin-top:8px}
+td,th{padding:8px;border-bottom:1px solid #ffe0ee}
+th{background:#ffb3d1;color:#fff}
+tr.me td{background:#fff3b8;font-weight:bold}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+var QS=[
+{q:"내가 좋아하는 색은 무엇일까🤔?",o:["검은색","흰색","하늘색","핑크색","보라색"],a:1},
+{q:"나의 생일은 언제일까?🥲",o:["7월 9일","7월 21일","7월 10일","7월 15일","7월 12일"],a:4},
+{q:"내가 제일 좋아하는 운동은 🤸‍♀️?",o:["복싱","피구","겨루기","야구","축구"],a:2},
+{q:"내가 가장 좋아하는 음식은🫢?",o:["떡볶이","감자탕","마라탕","불닭볶음면","비빔밥"],a:0},
+{q:"나는 피아노를 배운지 몇 년 되었을까🎹?",o:["1년","2년","3년","4년","3년 조금 안됨"],a:2},
+{q:"나는 태권도를 배운지 얼마나 되었을까?🥋",o:["1년","2년","6개월","5년","6년"],a:4},
+{q:"나는 미술 학원을 다녔을까?🎨",o:["O","X"],a:0,ox:true}
+];
+var GIRL='<svg class="girl" viewBox="0 0 120 210" xmlns="http://www.w3.org/2000/svg">'
++'<path d="M84 38 Q116 40 108 84 Q100 62 84 56Z" fill="#1c1c1c"/>'
++'<circle cx="86" cy="42" r="6" fill="#ff6fa5"/>'
++'<rect x="22" y="86" width="14" height="52" rx="7" fill="#fff" stroke="#c9c9d6" stroke-width="2"/>'
++'<rect x="84" y="86" width="14" height="52" rx="7" fill="#fff" stroke="#c9c9d6" stroke-width="2"/>'
++'<circle cx="29" cy="142" r="7" fill="#ffe0c2"/><circle cx="91" cy="142" r="7" fill="#ffe0c2"/>'
++'<rect x="34" y="132" width="52" height="68" rx="8" fill="#1f1f24"/>'
++'<line x1="60" y1="150" x2="60" y2="198" stroke="#3a3a42" stroke-width="2"/>'
++'<rect x="34" y="196" width="25" height="10" rx="5" fill="#fff" stroke="#c9c9d6" stroke-width="2"/>'
++'<rect x="61" y="196" width="25" height="10" rx="5" fill="#fff" stroke="#c9c9d6" stroke-width="2"/>'
++'<rect x="32" y="74" width="56" height="64" rx="12" fill="#fff" stroke="#c9c9d6" stroke-width="2"/>'
++'<line x1="60" y1="84" x2="60" y2="138" stroke="#c9c9d6" stroke-width="2"/>'
++'<path d="M40 76 Q60 96 80 76" fill="none" stroke="#c9c9d6" stroke-width="2"/>'
++'<line x1="52" y1="84" x2="52" y2="98" stroke="#c9c9d6" stroke-width="2"/><line x1="68" y1="84" x2="68" y2="98" stroke="#c9c9d6" stroke-width="2"/>'
++'<rect x="52" y="64" width="16" height="14" fill="#ffe0c2"/>'
++'<circle cx="60" cy="42" r="26" fill="#ffe0c2"/>'
++'<path d="M33 44 Q30 12 60 14 Q90 12 87 44 Q76 26 60 28 Q44 26 33 44Z" fill="#1c1c1c"/>'
++'<circle cx="50" cy="46" r="3" fill="#222"/><circle cx="70" cy="46" r="3" fill="#222"/>'
++'<circle cx="44" cy="54" r="4" fill="#ffb3c1" opacity=".7"/><circle cx="76" cy="54" r="4" fill="#ffb3c1" opacity=".7"/>'
++'<path d="M53 56 Q60 63 67 56" fill="none" stroke="#c0504d" stroke-width="2" stroke-linecap="round"/></svg>';
+var app=document.getElementById("app"),name="",idx=0,score=0,locked=false;
+function esc(s){return s.replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function start(){
+  app.innerHTML='<h1>🎀 나에 대한 퀴즈 🎀</h1><div class="bubble">퀴즈 시작할까요?</div>'+GIRL
+   +'<input id="nm" maxlength="10" placeholder="이름을 적어주세요"><br><button id="go">시작하기!</button>';
+  document.getElementById("go").onclick=function(){
+    var v=document.getElementById("nm").value.trim();
+    if(!v){document.getElementById("nm").focus();return}
+    name=v;idx=0;score=0;show();
+  };
+}
+function show(){
+  var q=QS[idx];locked=false;
+  var h='<div class="bar"><i style="width:'+(idx/QS.length*100)+'%"></i></div>'
+   +'<div>'+(idx+1)+' / '+QS.length+'</div><div class="q">'+esc(q.q)+'</div>'
+   +'<div class="'+(q.ox?'ox':'')+'">';
+  q.o.forEach(function(t,i){h+='<button class="opt" data-i="'+i+'">'+(q.ox?'':(i+1)+'번  ')+esc(t)+'</button>'});
+  h+='</div><div class="fb" id="fb"></div><button id="nx" class="hide">다음 ▶</button>'+GIRL;
+  app.innerHTML=h;
+  var bs=app.querySelectorAll(".opt");
+  bs.forEach(function(b){b.onclick=function(){pick(+b.dataset.i,bs)}});
+}
+function pick(i,bs){
+  if(locked)return;locked=true;
+  var q=QS[idx],fb=document.getElementById("fb"),ok=i===q.a;
+  if(ok){score++;fb.innerHTML='<span class="ok">정답! 🎉</span>'}
+  else{fb.innerHTML='<span class="no">땡! 😝</span>';bs[i].classList.add("wrong")}
+  bs[q.a].classList.add("right");
+  var nx=document.getElementById("nx");nx.classList.remove("hide");
+  nx.textContent=idx==QS.length-1?"결과 보기 ▶":"다음 ▶";
+  nx.onclick=function(){idx++;idx<QS.length?show():finish()};
+}
+function load(){try{return JSON.parse(localStorage.getItem("quizRank2")||"[]")}catch(e){return[]}}
+function save(a){try{localStorage.setItem("quizRank2",JSON.stringify(a))}catch(e){}}
+var board=null;
+function finish(){
+  var list=board||load();
+  var me={name:name,score:score,order:list.length+1,mine:true};
+  list.push(me);
+  var plain=list.map(function(x){return{name:x.name,score:x.score,order:x.order}});
+  save(plain);
+  var sorted=list.slice().sort(function(a,b){return b.score-a.score||a.order-b.order});
+  var h='<h1>결과 발표 🏆</h1><div class="bubble">'+esc(name)+'님은 '+QS.length+'문제 중 '+score+'개 맞혔어요!</div>'+GIRL
+   +'<table><tr><th>순위</th><th>이름</th><th>맞힌 개수</th></tr>';
+  sorted.forEach(function(x,i){
+    var medal=i==0?"🥇":i==1?"🥈":i==2?"🥉":(i+1);
+    h+='<tr'+(x===me?' class="me"':'')+'><td>'+medal+'</td><td>'+esc(x.name)+'</td><td>'+x.score+'개</td></tr>';
+  });
+  h+='</table><p style="font-size:14px">점수가 같으면 먼저 한 사람이 위에 있어요!</p><button id="re">다음 친구 도전! 🔄</button>';
+  app.innerHTML=h;
+  document.getElementById("re").onclick=function(){board=null;start()};
+}
+start();
+</script>
+</body>
+</html>

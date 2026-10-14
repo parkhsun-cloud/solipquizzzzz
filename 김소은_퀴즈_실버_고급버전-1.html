@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>소은이 알아맞히기 퀴즈</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,"Noto Sans KR",sans-serif;background:#fff8fb;color:#493d47}
+body:before{content:"";position:fixed;inset:0;z-index:-2;background-image:radial-gradient(#f2cfe0 1.5px,transparent 1.5px),linear-gradient(135deg,transparent 48%,#f7e2ed 49%,#f7e2ed 51%,transparent 52%);background-size:18px 18px,36px 36px;opacity:.65}
+.app{max-width:520px;margin:auto;min-height:100vh;padding:18px 14px 30px}
+.card{background:rgba(255,255,255,.94);border:3px solid #f1d8e5;border-radius:28px;padding:22px;box-shadow:0 8px 24px #cdaebe30}
+h1{margin:4px 0 8px;text-align:center;font-size:31px}.sub{text-align:center;color:#927d8b;margin-bottom:15px}
+.logo{margin:auto;width:max-content;padding:7px 13px;border-radius:999px;background:#fff0f6;color:#d16a9a;font-weight:900;font-size:12px;letter-spacing:2px}
+.bear{font-size:76px;text-align:center;margin:12px 0}
+input{width:100%;padding:14px;border:2px solid #ead5e0;border-radius:16px;font-size:17px;outline:none}
+.modeTitle{font-weight:900;margin:18px 0 8px}.modes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button{border:0;border-radius:17px;padding:14px;font-size:16px;font-weight:800;cursor:pointer}
+.mode{background:#fff0f6;border:2px solid #f1d1df;color:#8c5470}.mode.on{background:#ffd9e9;border-color:#e99bbb}
+.start{width:100%;margin-top:16px;background:#f28ab3;color:white;font-size:18px}
+.top{display:flex;justify-content:space-between;gap:8px;font-weight:900;margin-bottom:10px;font-size:13px}.pill{background:#fff0f6;padding:7px 10px;border-radius:999px}
+.progress{height:10px;background:#f2e5eb;border-radius:99px;overflow:hidden;margin-bottom:16px}.bar{height:100%;background:#f28ab3;width:0;transition:.3s}
+.modeBadge{text-align:center;font-weight:900;color:#c45d8c;margin-bottom:8px}
+.qimg{height:130px;border-radius:22px;background:#fff5f8;border:2px solid #f3dbe5;display:flex;align-items:center;justify-content:center;font-size:76px;margin-bottom:13px;overflow:hidden}
+.qimg .shapes{font-size:43px;letter-spacing:4px}
+.qtag{font-size:12px;color:#a48696;font-weight:900;letter-spacing:2px}
+.question{font-size:23px;font-weight:900;margin:5px 0 14px;line-height:1.35}
+.answers{display:grid;gap:10px}.answer{background:white;border:2px solid #eadbe3;text-align:left;min-height:62px;display:flex;align-items:center;gap:10px}.answer:hover{background:#fff4f8}.num{width:30px;height:30px;border-radius:50%;background:#f8e6ef;display:grid;place-items:center;flex:none}
+.feedback{text-align:center;font-size:18px;font-weight:900;min-height:29px;margin:12px 0;color:#d16691}
+.next{width:100%;background:#5e5060;color:white;display:none}.next.show{display:block}
+.result{text-align:center}.score{font-size:52px;font-weight:1000;color:#e06d9e;margin:5px}
+.rank{margin-top:18px;text-align:left}.rank h3{text-align:center}.rankrow{display:flex;justify-content:space-between;padding:11px 13px;margin:7px 0;background:#fff4f8;border-radius:14px;font-weight:900}.again{width:100%;margin-top:15px;background:#f28ab3;color:white}
+.hidden{display:none}.note{font-size:12px;color:#9a8792;text-align:center;margin-top:12px;line-height:1.5}
+</style>
+
+<style>
+:root{
+ --silver-1:#fbfcff; --silver-2:#e9edf4; --silver-3:#c5ccd8;
+ --silver-4:#9da8b8; --ink:#515a6b; --pink:#f4dbe7; --lav:#e7e2f4;
+}
+body{
+ background:
+  radial-gradient(circle at 12px 12px,rgba(255,255,255,.9) 1.5px,transparent 2px) 0 0/24px 24px,
+  repeating-linear-gradient(135deg,rgba(190,199,213,.16) 0 2px,transparent 2px 12px),
+  linear-gradient(135deg,#f8f7fc 0%,#e8edf5 48%,#f9eef4 100%) !important;
+ color:var(--ink);
+}
+.card{
+ border:1px solid rgba(255,255,255,.95) !important;
+ background:linear-gradient(145deg,rgba(255,255,255,.96),rgba(239,242,248,.96)) !important;
+ box-shadow:0 16px 38px rgba(111,124,146,.18),inset 0 1px 0 #fff !important;
+}
+.logo,.modeTitle{
+ color:#717d91 !important;
+ text-shadow:0 1px 0 white;
+}
+h1{
+ color:#626d81 !important;
+ text-shadow:0 1px 0 #fff;
+}
+button{
+ transition:transform .16s ease,box-shadow .16s ease,filter .16s ease;
+}
+button:active{transform:scale(.97)}
+.answer, .mode{
+ border:1px solid #d5dbe5 !important;
+ background:linear-gradient(145deg,#fff,#e9edf4) !important;
+ color:#596579 !important;
+ box-shadow:0 4px 0 #c6ceda,0 7px 14px rgba(108,121,144,.10) !important;
+}
+.answer:hover,.mode:hover{
+ background:linear-gradient(145deg,#fff,#e4e8f0) !important;
+ box-shadow:0 4px 0 #aeb8c8,0 9px 18px rgba(108,121,144,.16) !important;
+}
+.mode.on,.mode:focus{
+ background:linear-gradient(135deg,#dce2ec,#fff,#d4dce8) !important;
+ border-color:#aeb9ca !important;
+}
+#next,.startBtn,.primary{
+ background:linear-gradient(135deg,#aeb9ca,#eef1f6,#b6c0d0) !important;
+ color:#4d586b !important;
+ border:1px solid white !important;
+ box-shadow:0 5px 0 #9aa6b8,0 9px 18px rgba(90,103,127,.18) !important;
+}
+.progress,.bar{
+ background:#dce2eb !important;
+ border:1px solid white;
+}
+.progress span,.bar span{
+ background:linear-gradient(90deg,#b4becd,#fdfdff,#a9b5c8) !important;
+}
+input{
+ border:1px solid #cbd3df !important;
+ background:linear-gradient(#fff,#f3f5f9) !important;
+ box-shadow:inset 0 2px 4px rgba(100,113,136,.06) !important;
+}
+.bear{
+ filter:drop-shadow(0 5px 4px rgba(100,110,130,.17));
+}
+.note,.sub{color:#7b8495 !important}
+#visual,.visual,.questionVisual{
+ border:1px solid #e0e5ed !important;
+ background:linear-gradient(145deg,#fff,#edf0f6) !important;
+ box-shadow:inset 0 1px 0 white !important;
+}
+.rankItem,.rankingItem,.rank-row{
+ border:1px solid #dce2eb !important;
+ background:linear-gradient(120deg,#fff,#f0f2f7) !important;
+}
+</style>
+
+</head>
+<body>
+<div class="app">
+<section id="start" class="card">
+  <div class="logo">QUIZ CHALLENGE</div>
+  <h1>🌷 소은이 퀴즈 🌷</h1>
+  <div class="sub">나를 얼마나 잘 알고 있을까?</div>
+  <div class="bear">🧸</div>
+  <input id="name" maxlength="12" placeholder="처음에 이름을 적어줘!">
+  <button class="start" onclick="startQuiz()">퀴즈 시작하기 ▶</button>
+  <div class="note">정답이면 10점! 7번 문제 뒤에 하드모드를 선택할 수 있어.</div>
+</section>
+
+<section id="quiz" class="card hidden">
+  <div class="top"><span class="pill" id="qn">1 / 9</span><span class="pill">💗 <span id="score">0</span>점</span><span class="pill" id="player">이름</span></div>
+  <div class="progress"><div class="bar" id="bar"></div></div>
+  <div class="modeBadge" id="modeBadge">🌼 일반 모드</div>
+  <div class="qimg" id="qimg"></div>
+  <div class="qtag">QUESTION</div>
+  <div class="question" id="question"></div>
+  <div class="answers" id="answers"></div>
+  <div class="feedback" id="feedback"></div>
+  <button class="next" id="next" onclick="nextQ()">다음 문제 →</button>
+</section>
+
+<section id="hardChoice" class="card hidden">
+  <div class="logo">BONUS ROUND</div>
+  <h1>🔥 하드모드 할래?</h1>
+  <div class="bear">🧸</div>
+  <div class="sub">어려운 문제 2개가 더 있어! 맞히면 한 문제당 20점이야.</div>
+  <div class="modes">
+    <button class="mode" onclick="chooseHard(true)">할래! 🔥</button>
+    <button class="mode" onclick="chooseHard(false)">안 할래 🙂</button>
+  </div>
+  <div class="note">선택사항이니까 안 해도 괜찮아!</div>
+</section>
+
+<section id="result" class="card hidden result">
+  <div class="logo">RESULT</div>
+  <h1>🎉 퀴즈 끝!</h1>
+  <div class="score" id="finalScore">0점</div>
+  <div id="correctText"></div>
+  <div id="message"></div>
+  <div class="rank"><h3>🏆 TOP 3</h3><div id="ranking"></div></div>
+  <button class="again" onclick="location.reload()">다시 하기 🔄</button>
+  <div class="note">이 기기에서는 기록이 저장돼.</div>
+</section>
+</div>
+
+<script>
+const questions=[
+{q:"내가 젤 좋아하는 캐릭터는?",o:["몬치치","리락쿠마","무치치","미피","한교동"],a:0,visual:["🐵","🐻","🐵","🐰","🐟"]},
+{q:"내 생일은?",o:["1월 8일","10월 17일","11월 18일","11월 17일"],a:2,visual:["❄️","🍁","🎂","🎈"]},
+{q:"내가 젤 싫어하는 과목은?",o:["과학","수학","사회","체육"],a:1,visual:["🔬","➗","🌏","⚽"]},
+{q:"내가 젤 좋아하는 취미는?",o:["그림그리기","춤추기","노래하기","공부하기"],a:0,visual:["🎨","💃","🎤","📚"]},
+{q:"내가 좋아하는 색은?",o:["주황색","무지개","비취색","빨강색"],a:2,visual:["🟧","🌈","🟢","🟥"]},
+{q:"내가 좋아하는 과목은?",o:["실과","창체","미술","교실놀이"],a:2,visual:["🧵","📝","🎨","🎲"]},
+{q:"몇번일까?",o:["4","7","16","19"],a:0,visual:["4️⃣","7️⃣","1️⃣6️⃣","1️⃣9️⃣"]},
+{q:"내 가방에 있는 몬치치 인형 개수는?",o:["5개","4개","7개","2개"],a:0,hard:true,visual:["🐵🐵🐵🐵🐵","🐵🐵🐵🐵","🐵🐵🐵🐵🐵🐵🐵","🐵🐵"]},
+{q:"나의 양손 팔찌 개수는?",o:["3개","6개","4개","3개","7개"],a:2,hard:true,visual:["💎💎💎","💎💎💎💎💎💎","💎💎💎💎","💎💎💎","💎💎💎💎💎💎💎"]}
+];
+let hard=false,idx=0,score=0,correct=0,answered=false,playerName="";
+function chooseHard(v){hard=v;document.getElementById("hardChoice").classList.add("hidden");if(v){idx=7;document.getElementById("quiz").classList.remove("hidden");showQ()}else finish()}
+function startQuiz(){
+ playerName=document.getElementById("name").value.trim()||"익명";
+ idx=0;score=0;correct=0;answered=false;
+ hard=false;
+ document.getElementById("start").classList.add("hidden");document.getElementById("quiz").classList.remove("hidden");
+ document.getElementById("player").textContent=playerName;showQ();
+}
+function showQ(){
+ const q=questions[idx];document.getElementById("qn").textContent=(idx+1)+" / "+(hard?9:7);
+ document.getElementById("score").textContent=score;document.getElementById("bar").style.width=((idx+1)/(hard?9:7)*100)+"%";
+ document.getElementById("modeBadge").textContent=q.hard?"🔥 하드모드 — 점수 2배!":"🌼 일반 모드";
+ document.getElementById("qimg").innerHTML='<div class="shapes">'+q.visual.join(" ")+"</div>";
+ document.getElementById("question").textContent=q.q;document.getElementById("feedback").textContent="";
+ const box=document.getElementById("answers");box.innerHTML="";answered=false;document.getElementById("next").classList.remove("show");
+ q.o.forEach((x,i)=>{const b=document.createElement("button");b.className="answer";b.innerHTML='<span class="num">'+(i+1)+'</span><span>'+x+"</span>";b.onclick=()=>answer(i);box.appendChild(b)});
+}
+function answer(n){
+ if(answered)return;answered=true;const q=questions[idx],buttons=document.querySelectorAll(".answer");
+ buttons.forEach(b=>b.disabled=true);
+ if(n===q.a){correct++;score+=q.hard?20:10;document.getElementById("feedback").textContent="나에 대해 잘 아네! 💗"}
+ else document.getElementById("feedback").textContent="분발해 😆 정답은 "+(q.a+1)+"번 "+q.o[q.a]+"이야!";
+ document.getElementById("score").textContent=score;document.getElementById("next").classList.add("show");
+}
+function nextQ(){
+ if(idx<6){idx++;showQ()}
+ else if(idx===6){document.getElementById("quiz").classList.add("hidden");document.getElementById("hardChoice").classList.remove("hidden")}
+ else if(idx<8){idx++;showQ()}
+ else finish();
+}
+function finish(){
+ document.getElementById("quiz").classList.add("hidden");document.getElementById("result").classList.remove("hidden");
+ document.getElementById("finalScore").textContent=score+"점";document.getElementById("correctText").textContent=correct+"개 맞혔어!";
+ document.getElementById("message").textContent=correct>=5?"🌟 5개 이상! 나를 정말 잘 알고 있구나! 🌟":"";
+ saveRank();showRanking();
+}
+function saveRank(){
+ let r=JSON.parse(localStorage.getItem("soeunQuizRanks")||"[]");
+ r.push({name:playerName,score,correct,time:Date.now()});
+ r.sort((a,b)=>b.score-a.score||b.correct-a.correct||a.time-b.time);
+ localStorage.setItem("soeunQuizRanks",JSON.stringify(r.slice(0,50)));
+}
+function showRanking(){
+ let r=JSON.parse(localStorage.getItem("soeunQuizRanks")||"[]").slice(0,3);
+ document.getElementById("ranking").innerHTML=r.length?r.map((x,i)=>'<div class="rankrow"><span>'+(i+1)+". "+esc(x.name)+'</span><span>'+x.score+"점</span></div>").join(""):"아직 기록이 없어!";
+}
+function esc(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+</script>
+</body>
+</html>

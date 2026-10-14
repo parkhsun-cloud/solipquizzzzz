@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>아한의 취향 퀴즈 🌿</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh; font-family:"Noto Sans KR",sans-serif;
+  color:#000; overflow-x:hidden;
+  background:
+    radial-gradient(circle at 15% 15%,#fff8dc 0 7%,transparent 8%),
+    radial-gradient(circle at 85% 10%,#d7efff 0 9%,transparent 10%),
+    linear-gradient(180deg,#d9efff 0%,#eef8ff 55%,#d5eaff 100%);
+}
+body:before,body:after{
+  content:"";position:fixed;z-index:-1;border-radius:50%;
+  background:rgba(255,255,255,.45);filter:blur(2px);
+}
+body:before{width:180px;height:70px;top:10%;left:-30px}
+body:after{width:220px;height:80px;top:22%;right:-50px}
+.leaf{position:fixed;font-size:30px;opacity:.45;z-index:-1;animation:float 5s ease-in-out infinite}
+.l1{left:5%;top:35%}.l2{right:6%;top:65%;animation-delay:1s}.l3{left:12%;bottom:7%;animation-delay:2s}
+@keyframes float{50%{transform:translateY(-12px) rotate(8deg)}}
+.wrap{width:min(760px,92%);margin:32px auto;padding-bottom:35px}
+.card{
+  background:rgba(255,252,240,.92);border:3px solid #9cc9e8;
+  border-radius:28px;box-shadow:0 14px 35px rgba(78,83,55,.16);
+  padding:26px;position:relative;overflow:hidden;
+}
+.card:before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(circle at 90% 5%,rgba(255,255,255,.8),transparent 18%);
+}
+h1{font-size:clamp(30px,7vw,48px);margin:5px 0 8px;color:#000;letter-spacing:-2px}
+.subtitle{color:#000;font-size:16px;margin-bottom:20px}
+.story{font-size:18px;line-height:1.65;margin:12px 0}
+.badge{display:inline-block;background:#2587c5;color:#000;padding:7px 13px;border-radius:20px;font-weight:700}
+.progress{height:12px;background:#d8ebf7;border-radius:20px;overflow:hidden;margin:20px 0}
+.bar{height:100%;width:0;background:linear-gradient(90deg,#4fa8dc,#7bc4ed);transition:.35s}
+.qnum{color:#000;font-weight:bold;margin-bottom:7px}
+.question{font-size:24px;font-weight:800;line-height:1.45;margin:8px 0 20px;color:#514b41}
+.options{display:grid;gap:12px}
+.option{
+  border:2px solid #b9d9ec;background:#fafdff;border-radius:17px;padding:15px 17px;
+  font-size:17px;cursor:pointer;transition:.18s;text-align:left;
+}
+.option:hover{transform:translateY(-2px);background:#e8f6ff;border-color:#69acd3}
+.option.correct{background:#d9f0ff;border-color:#55a9d8}
+.option.wrong{background:#e5f4ff;border-color:#79b8dc}
+.option.disabled{pointer-events:none}
+.feedback{margin-top:15px;padding:13px 15px;border-radius:15px;background:#e2f3fc;display:none}
+button{
+  border:0;border-radius:18px;padding:14px 24px;font-size:17px;font-weight:800;
+  background:#237bb4;color:#000;cursor:pointer;box-shadow:0 5px 0 #185d8b;
+}
+button:active{transform:translateY(3px);box-shadow:0 2px 0 #185d8b}
+.center{text-align:center}
+.start-emoji{font-size:64px;margin:4px}
+.result-score{font-size:54px;font-weight:900;color:#237bb4;margin:10px}
+.hidden{display:none}
+.tiny{font-size:13px;color:#9a8d77}
+.card, .card * { color:#000 !important; }
+.option:hover, .option.correct, .option.wrong { color:#000 !important; }
+button, .badge { color:#000 !important; }
+
+/* 전체 파란 하늘 느낌 */
+body{
+  background:
+    radial-gradient(circle at 15% 12%, #ffffff 0 7%, transparent 8%),
+    radial-gradient(circle at 85% 10%, #d7efff 0 9%, transparent 10%),
+    linear-gradient(180deg,#cfeaff 0%,#eef8ff 55%,#d8efff 100%);
+}
+.card{background:rgba(250,253,255,.95);border-color:#9cc9e8;}
+.card, .card * { color:#000 !important; }
+.option:hover{background:#e8f6ff;border-color:#69acd3;}
+.option.correct{background:#d9f0ff;border-color:#55a9d8;}
+.option.wrong{background:#e5f4ff;border-color:#79b8dc;}
+button,.badge{background:#237bb4;color:#000 !important;}
+</style>
+</head>
+<body>
+<div class="leaf l1">🍃</div><div class="leaf l2">🌿</div><div class="leaf l3">🍂</div>
+<div class="wrap">
+  <div class="card">
+    <section id="start" class="center">
+      <div class="start-emoji">🌿🐈✨</div>
+      <h1>아한의 취향 퀴즈</h1>
+      <div class="subtitle">숲속 동화책처럼 포근한 나만의 퀴즈 여행</div>
+      <p class="story">조용한 숲길을 따라가며<br>아한에 관한 문제를 하나씩 풀어보자! 🍃</p>
+      <button onclick="startQuiz()">🌱 퀴즈 시작하기</button>
+    </section>
+
+    <section id="quiz" class="hidden">
+      <span class="badge">🌼 숲속 퀴즈</span>
+      <div class="progress"><div class="bar" id="bar"></div></div>
+      <div class="qnum" id="qnum"></div>
+      <div class="question" id="question"></div>
+      <div class="options" id="options"></div>
+      <div class="feedback" id="feedback"></div>
+    </section>
+
+    <section id="result" class="hidden center">
+      <div class="start-emoji">🌳✨🐱</div>
+      <h1>퀴즈 여행 끝!</h1>
+      <div class="result-score" id="score"></div>
+      <p class="story" id="message"></p>
+      <button onclick="location.reload()">🍀 다시 해보기</button>
+      <p class="tiny">따뜻한 동화 속에서 퀴즈를 푼 것처럼 즐겨보세요.</p>
+    </section>
+  </div>
+</div>
+
+<script>
+const questions=[
+ {q:"아한이 가장 좋아하는 아이돌 그룹은?",a:["보넥도","엔하이픈","에스파","코르티스"],c:["보넥도"]},
+ {q:"보넥도 멤버 중 아한이 가장 좋아하는 멤버는?",a:["성호","태산","리우","운학"],c:["태산"]},
+ {q:"다음 중 아한이 좋아하는 음식으로 알려준 것을 모두 고르세요.",a:["엽떡","제육볶음","떡볶이","오므라이스"],c:["제육볶음","오므라이스"],multi:true},
+ {q:"아한이 좋아하는 아이스크림은?",a:["월드콘","메로나","빠삐코","붕어싸만코"],c:["빠삐코"]},
+ {q:"아한이 가장 좋아하는 취미는?",a:["노래 듣기","축구하기","그림 그리기","요리하기"],c:["노래 듣기"]},
+ {q:"아한이 가장 좋아하는 책은?",a:["시한부","마법천자문","어린 왕자","해리 포터"],c:["시한부"]},
+ {q:"아한이 가장 좋아하는 노래는?",a:["연애의 조건","I Wonder Always","BoomBoomBoom","Drama"],c:["Drama"]},
+ {q:"아한이 가장 좋아하는 장소는?",a:["산","놀이공원","도서관","바다"],c:["바다"]},
+ {q:"아한이 가장 좋아하는 동물은 고양이다.",a:["맞다","아니다"],c:["맞다"]},
+ {q:"아한이 가장 좋아하는 색은?",a:["하늘색","버건디색","노란색","연두색"],c:["버건디색"]},
+ {q:"아한의 생일은 언제인가?",a:["3월 4일","4월 3일","3월 14일","4월 4일"],c:["3월 4일"]},
+ {q:"아한이 가장 좋아하는 간식은?",a:["씨리얼","초콜릿","젤리","감자칩"],c:["씨리얼"]},
+ {q:"아한이 가장 좋아하는 과목은?",a:["국어","수학","과학","체육"],c:["과학"]},
+ {q:"이 퀴즈의 주인공 이름은?",a:["아한","민지","서연","지우"],c:["우아한"]}
+];
+let idx=0,score=0;
+const $=id=>document.getElementById(id);
+function startQuiz(){$("start").classList.add("hidden");$("quiz").classList.remove("hidden");showQuestion()}
+function showQuestion(){
+ const x=questions[idx]; $("qnum").textContent=`Q${idx+1} / ${questions.length}`;
+ $("question").textContent=x.q;$("bar").style.width=(idx/questions.length*100)+"%";
+ $("feedback").style.display="none";$("options").innerHTML="";
+ x.a.forEach(v=>{
+   const b=document.createElement("button");b.className="option";b.textContent=v;
+   b.onclick=()=>answer(b,v,x);$("options").appendChild(b);
+ });
+}
+function answer(btn,v,x){
+ [...$("options").children].forEach(b=>b.classList.add("disabled"));
+ let ok;
+ if(x.multi){
+   const chosen=[v];
+   // For the food question, switch to two-choice selection mode.
+   $("options").innerHTML="";
+   x.a.forEach(opt=>{
+     const b=document.createElement("button");b.className="option";
+     b.textContent=(x.c.includes(opt)?"":"")+opt;
+     b.onclick=()=>multiPick(b,opt,x);
+     $("options").appendChild(b);
+   });
+   btn=null; return;
+ } else ok=x.c.includes(v);
+ finish(ok);
+}
+let selected=[];
+function multiPick(btn,v,x){
+ if(btn.classList.contains("correct")){btn.classList.remove("correct");selected=selected.filter(z=>z!==v)}
+ else {btn.classList.add("correct");selected.push(v)}
+ let exact=selected.length===x.c.length && x.c.every(z=>selected.includes(z));
+ if(selected.length===x.c.length){
+   [...$("options").children].forEach(b=>b.classList.add("disabled"));
+   finish(exact);selected=[];
+ }
+}
+function finish(ok){
+ if(ok)score++;
+ $("feedback").style.display="block";
+ $("feedback").textContent=ok?"✨ 정답! 숲속 친구들이 박수를 보내고 있어요!":"🍂 아쉬워요! 다음 문제에서는 다시 도전해봐요!";
+ setTimeout(()=>{
+   idx++;
+   if(idx<questions.length)showQuestion();else showResult();
+ },650);
+}
+function showResult(){
+ $("quiz").classList.add("hidden");$("result").classList.remove("hidden");
+ $("score").textContent=`${score} / ${questions.length}점`;
+ $("message").textContent=score===questions.length?"🌟 완벽해! 우아한 취향을 모두 알고 있네!":
+ score>=questions.length*0.7?"🌿 정말 잘했어! 우아한 취향 탐험가 인증!":
+ "🍀 괜찮아! 다시 숲길을 걸으며 도전해보자!";
+}
+</script>
+</body>
+</html>

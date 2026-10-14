@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>귀여운 지유의 3x3 뽑기 빙고 퀴즈!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Jua&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Jua', sans-serif;
+            background: linear-gradient(135deg, #fbcfe8 0%, #fed7aa 50%, #e0f2fe 100%);
+            touch-action: manipulation;
+        }
+
+        .font-gaegu {
+            font-family: 'Gaegu', cursive;
+        }
+
+        @keyframes floatCute {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(2deg); }
+        }
+
+        .animate-float {
+            animation: floatCute 3s ease-in-out infinite;
+        }
+
+        .bingo-tile-cleared {
+            background: linear-gradient(135deg, #f472b6 0%, #fb7185 100%) !important;
+            color: white !important;
+            transform: scale(0.98);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+            animation: tilePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes tilePop {
+            0% { transform: scale(0.8); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(0.98); }
+        }
+
+        .confetti-emoji {
+            position: absolute;
+            font-size: 30px;
+            animation: confettiFall 1.6s ease-out forwards;
+            pointer-events: none;
+            z-index: 60;
+        }
+
+        @keyframes confettiFall {
+            0% { transform: translateY(0) scale(0.2) rotate(0deg); opacity: 1; }
+            50% { transform: translateY(-50px) scale(1.3) rotate(180deg); opacity: 1; }
+            100% { transform: translateY(180px) scale(0.8) rotate(360deg); opacity: 0; }
+        }
+
+        .fail-overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 22vh;
+            z-index: 100;
+            pointer-events: none;
+            animation: popFail 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popFail {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 10px 10px 0;
+            border-style: solid;
+            border-color: #ffffff transparent;
+            display: block;
+            width: 0;
+        }
+
+        /* Note slip flip card style */
+        .slip-card {
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+        .slip-card-inner {
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+
+        .slip-card.flipped .slip-card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .slip-front, .slip-back {
+            backface-visibility: hidden;
+        }
+
+        .slip-back {
+            transform: rotateY(180deg);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-3 sm:p-5 select-none">
+
+    <div id="app-card" class="relative bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl border-4 border-pink-300 p-4 sm:p-6 w-full max-w-lg text-center overflow-hidden transition-all duration-300">
+
+        <!-- ================= INTRO SCREEN ================= -->
+        <div id="start-screen" class="flex flex-col items-center py-2">
+            <!-- Cute SVG Character Jiyu -->
+            <div class="relative mb-3 animate-float">
+                <svg width="130" height="130" viewBox="0 0 120 120" class="drop-shadow-md">
+                    <path d="M 25 45 Q 15 75 22 90 Q 30 95 38 85 Z" fill="#4a3728" />
+                    <path d="M 95 45 Q 105 75 98 90 Q 90 95 82 85 Z" fill="#4a3728" />
+                    <circle cx="60" cy="62" r="38" fill="#ffe0bd" />
+                    <path d="M 22 55 C 20 20, 100 20, 98 55 C 98 35, 82 30, 60 30 C 38 30, 22 35, 22 55 Z" fill="#5c4033" />
+                    <path d="M 32 38 Q 45 52 50 42 Q 60 55 70 42 Q 78 52 88 38 Q 60 25 32 38 Z" fill="#4a3728" />
+                    <circle cx="40" cy="70" r="7" fill="#ff9ebb" opacity="0.6" />
+                    <circle cx="80" cy="70" r="7" fill="#ff9ebb" opacity="0.6" />
+                    <rect x="33" y="52" width="22" height="18" rx="6" fill="none" stroke="#2d3748" stroke-width="3" />
+                    <rect x="65" y="52" width="22" height="18" rx="6" fill="none" stroke="#2d3748" stroke-width="3" />
+                    <line x1="55" y1="60" x2="65" y2="60" stroke="#2d3748" stroke-width="3" />
+                    <circle cx="44" cy="61" r="3" fill="#2d3748" />
+                    <circle cx="76" cy="61" r="3" fill="#2d3748" />
+                    <circle cx="45" cy="59" r="1" fill="#ffffff" />
+                    <circle cx="77" cy="59" r="1" fill="#ffffff" />
+                    <path d="M 54 74 Q 60 80 66 74" fill="none" stroke="#e11d48" stroke-width="2.5" stroke-linecap="round" />
+                    <path d="M 30 32 Q 25 25 32 20 Q 36 26 30 32 Z" fill="#f43f5e" />
+                    <path d="M 30 32 Q 35 25 28 20 Q 24 26 30 32 Z" fill="#f43f5e" />
+                    <circle cx="30" cy="32" r="3" fill="#fde047" />
+                </svg>
+                <div class="absolute -bottom-1 -right-1 bg-pink-500 text-white font-bold text-xs px-2.5 py-0.5 rounded-full shadow-md">
+                    지유 🎀
+                </div>
+            </div>
+
+            <!-- Speech Bubble Header -->
+            <div class="relative speech-bubble bg-pink-100 border-2 border-pink-300 rounded-2xl p-3 mb-4 w-full text-center">
+                <p class="text-lg font-bold text-pink-700 leading-tight">
+                    "환영해요! 퀴즈를 맞춰볼 준비가 되었나요!"
+                </p>
+            </div>
+
+            <!-- Instruction List Card -->
+            <div class="w-full bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 mb-5 text-left text-gray-700 space-y-2 text-sm sm:text-base font-gaegu font-bold shadow-inner">
+                <div class="flex items-center text-amber-900 font-sans font-bold text-base mb-1 border-b border-amber-200 pb-1">
+                    <span>📋 게임 방법</span>
+                </div>
+                <div class="flex items-start space-x-1.5">
+                    <span class="text-pink-500 font-sans font-bold">1.</span>
+                    <span>시작버튼을 눌러요!</span>
+                </div>
+                <div class="flex items-start space-x-1.5">
+                    <span class="text-pink-500 font-sans font-bold">2.</span>
+                    <span>원하는 칸을 누르고 퀴즈를 풀어요!</span>
+                </div>
+                <div class="flex items-start space-x-1.5">
+                    <span class="text-pink-500 font-sans font-bold">3.</span>
+                    <span>맞추면 찬스 뽑기를 선택할 수 있어요!</span>
+                </div>
+                <div class="flex items-start space-x-1.5">
+                    <span class="text-pink-500 font-sans font-bold">4.</span>
+                    <span>2줄 빙고를 먼저 완성해 보세요!</span>
+                </div>
+            </div>
+
+            <button onclick="startGame()" class="w-full bg-gradient-to-r from-pink-400 via-rose-400 to-amber-400 hover:from-pink-500 hover:to-amber-500 text-white text-xl py-3.5 rounded-2xl shadow-lg transform active:scale-95 transition-all font-bold border-b-4 border-rose-600">
+                시작! ✨
+            </button>
+        </div>
+
+        <!-- ================= BINGO & QUIZ SCREEN ================= -->
+        <div id="game-screen" class="hidden flex flex-col items-center">
+            
+            <!-- Character Jiyu Status Header -->
+            <div class="w-full flex items-center justify-between bg-pink-50/80 rounded-2xl p-2.5 mb-3 border border-pink-200 shadow-sm">
+                <div class="flex items-center space-x-2">
+                    <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center border-2 border-pink-300 text-2xl shadow-sm">
+                        👧👓
+                    </div>
+                    <div class="text-left">
+                        <div class="text-xs font-bold text-pink-500">지유</div>
+                        <div id="jiyu-status-text" class="text-xs sm:text-sm font-bold text-gray-700">
+                            빙고 칸을 터치해봐! 👆
+                        </div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <span class="text-xs text-gray-500 font-bold">목표: 2줄 빙고</span>
+                    <div id="bingo-line-count" class="text-lg font-bold text-rose-500">0 / 2 줄</div>
+                </div>
+            </div>
+
+            <!-- Question & Draw Panel Area (Above Grid) -->
+            <div id="question-panel" class="w-full bg-indigo-50 border-2 border-indigo-200 rounded-2xl p-3 mb-3 text-center min-h-[170px] flex flex-col justify-center items-center shadow-inner relative overflow-hidden">
+                
+                <!-- Idle View -->
+                <div id="question-idle-view" class="py-4 text-indigo-400 font-bold flex flex-col items-center">
+                    <span class="text-3xl mb-1">🧩</span>
+                    <span>아래 3x3 빙고 판에서<br>마음에 드는 칸을 터치해 주세요!</span>
+                </div>
+
+                <!-- Active Quiz View -->
+                <div id="question-active-view" class="hidden w-full flex flex-col items-center">
+                    <div id="q-number-badge" class="text-xs bg-indigo-200 text-indigo-800 px-2.5 py-0.5 rounded-full font-bold mb-1">
+                        1번 문제
+                    </div>
+                    <h3 id="q-text" class="text-sm sm:text-base font-bold text-gray-800 mb-1 leading-tight">
+                        질문 내용
+                    </h3>
+
+                    <!-- Feedback Text -->
+                    <div id="quiz-feedback-text" class="text-xs sm:text-sm font-bold h-5 text-rose-500 mb-1"></div>
+
+                    <!-- Options Grid -->
+                    <div id="q-options-container" class="w-full grid grid-cols-1 sm:grid-cols-2 gap-1.5 my-1">
+                    </div>
+
+                    <button id="q-multi-submit" onclick="checkMultiAnswer()" class="hidden w-full mt-2 bg-purple-500 hover:bg-purple-600 text-white text-xs py-1.5 rounded-lg font-bold shadow">
+                        정답 확인하기
+                    </button>
+                </div>
+
+                <!-- Lucky Draw Prompt View -->
+                <div id="draw-prompt-view" class="hidden w-full flex flex-col items-center py-2">
+                    <span class="text-2xl mb-1">🎁</span>
+                    <h3 class="text-lg font-bold text-amber-800 mb-2">뽑기를 해볼까요?</h3>
+                    <div class="flex space-x-3 w-full max-w-xs">
+                        <button onclick="startLuckyDraw()" class="flex-1 bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-500 hover:to-orange-500 text-white py-2 rounded-xl font-bold shadow transition-transform active:scale-95">
+                            뽑기할게요! ✨
+                        </button>
+                        <button onclick="skipLuckyDraw()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-xl font-bold shadow transition-transform active:scale-95">
+                            아니요
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Lucky Draw Slip Cards View -->
+                <div id="draw-slips-view" class="hidden w-full flex flex-col items-center">
+                    <div id="draw-instruction-text" class="text-xs sm:text-sm font-bold text-amber-800 mb-2">
+                        맘에 드는 쪽지를 1개 선택하세요! ✉️
+                    </div>
+
+                    <!-- 5 Slip Cards Container -->
+                    <div id="slips-container" class="grid grid-cols-5 gap-1.5 w-full">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+
+                <!-- Free Cell Selection Mode Banner -->
+                <div id="free-select-view" class="hidden w-full flex flex-col items-center py-2">
+                    <div class="text-sm font-bold text-purple-700 mb-1" id="free-select-title">
+                        🎨 찬스 사용 중!
+                    </div>
+                    <div class="text-xs text-gray-600" id="free-select-desc">
+                        원하는 칸을 터치해 색칠해 주세요.
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3x3 Bingo Grid -->
+            <div class="w-full bg-pink-100 p-2.5 rounded-2xl border-2 border-pink-200 shadow-md">
+                <div class="grid grid-cols-3 gap-2 w-full aspect-square">
+                    <button onclick="onTileClick(0)" id="tile-0" class="bg-white hover:bg-pink-50 border-2 border-pink-200 rounded-xl flex flex-col items-center justify-center p-1 transition-all shadow-sm active:scale-95">
+                        <span class="text-xs text-pink-400 font-bold">#1</span>
+                        <span class="text-sm sm:text-base font-bold text-gray-700">생일</span>
+                    </button>
+                    <button onclick="onTileClick(1)" id="tile-1" class="bg-white hover:bg-pink-50 border-2 border-pink-200 rounded-xl flex flex-col items-center justify-center p-1 transition-all shadow-sm active:scale-95">
+                        <span class="text-xs text-pink-400 font-bold">#2</span>
+                        <span class="text-sm sm:text-base font-bold text-gray-700">과목</span>
+                    </button>
+                    <button onclick="onTileClick(2)" id="tile-2" class="bg-white hover:bg-pink-50 border-2 border-pink-200 rounded-xl flex flex-col items-center justify-center p-1 transition-all shadow-sm active:scale-95">
+                        <span class="text-xs text-pink-400 font-bold">#3</span>
+                        <span class="text-sm sm:text-base font-bold text-gray-700">간식</span>
+                    </button>
+
+                    <button onclick="onTileClick(3)" id="tile-3" class="bg-white hover:bg-pink-50 border-2 border-pink-200 rounded-xl flex flex-col items-center justify-center p-1 transition-all shadow-sm active:scale-95">
+                        <span class="text-xs text-pink-400 font-bold">#4</span>
+                        <span class="text-sm sm:text-base font-bold text-gray-700">요일</span>
+                    </button>
+                    <button onclick="onTileClick(4)" id="tile-4" class="bg-white hover:bg-pink-50 border-2 border-pink-200 rounded-xl flex flex-col items-center justify-center p-1 transition-all shadow-sm active:scale-95">
+                        <span class="text-xs text-pink-400 font-bold">#5</span>
+                        <span class="text-sm sm:text-base font-bold text-gray-700">색깔</span>
+                    </button>
+                    <button onclick="onTileClick(5)" id="tile-5" class="bg-white hover:bg-pink-50 border-2 border-pink-200 rounded-xl flex flex-col items-center justify-center p-1 transition-all shadow-sm active:scale-95">
+                        <span class="text-xs text-pink-400 font-bold">#6</span>
+                        <span class="text-sm sm:text-base font-bold text-gray-700">캐릭터</span>
+                    </button>
+
+                    <button onclick="onTileClick(6)" id="tile-6" class="bg-white hover:bg-pink-50 border-2 border-pink-200 rounded-xl flex flex-col items-center justify-center p-1 transition-all shadow-sm active:scale-95">
+                        <span class="text-xs text-pink-400 font-bold">#7</span>
+                        <span class="text-sm sm:text-base font-bold text-gray-700">계절</span>
+                    </button>
+                    <button onclick="onTileClick(7)" id="tile-7" class="bg-white hover:bg-pink-50 border-2 border-pink-200 rounded-xl flex flex-col items-center justify-center p-1 transition-all shadow-sm active:scale-95">
+                        <span class="text-xs text-pink-400 font-bold">#8</span>
+                        <span class="text-sm sm:text-base font-bold text-gray-700">취미</span>
+                    </button>
+                    <button onclick="onTileClick(8)" id="tile-8" class="bg-white hover:bg-pink-50 border-2 border-pink-200 rounded-xl flex flex-col items-center justify-center p-1 transition-all shadow-sm active:scale-95">
+                        <span class="text-xs text-pink-400 font-bold">#9</span>
+                        <span class="text-sm sm:text-base font-bold text-gray-700">동물</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= FINAL WIN SCREEN ================= -->
+        <div id="end-screen" class="hidden flex flex-col items-center py-6">
+            <div class="w-28 h-28 bg-amber-100 rounded-full flex items-center justify-center border-4 border-amber-300 text-6xl shadow-inner mb-3 animate-bounce">
+                🥳👧👓
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-1">
+                축하합니다!🎉
+            </h2>
+            <p class="text-lg text-pink-600 font-bold mb-4">
+                지유의 2줄 빙고를 모두 완성했어요!
+            </p>
+            <button onclick="restartGame()" class="w-full bg-gradient-to-r from-pink-400 to-rose-500 hover:from-pink-500 hover:to-rose-600 text-white text-lg py-3 rounded-2xl shadow-lg font-bold border-b-4 border-rose-700">
+                다시 하기 🔄
+            </button>
+        </div>
+    </div>
+
+    <!-- 1/4 Screen Size Incorrect Emoticon Overlay -->
+    <div id="fail-emoji-overlay" class="fail-overlay hidden">😓</div>
+
+    <script>
+        // Questions Data Mapping
+        const bingoQuestions = [
+            { id: 0, title: "생일", q: "나는 생일이 언제 일까요?", options: ["(1) 6월", "(2) 12월", "(3) 10월", "(4) 8월", "(5) 3월"], answer: [4] },
+            { id: 1, title: "과목", q: "내가 학교에서 가장 즐겁게 듣는 과목은?", options: ["(1) 체육", "(2) 사회", "(3) 과학", "(4) 국어", "(5) 수학"], answer: [2] },
+            { id: 2, title: "간식", q: "내가 가장 좋아하는 간식은?", options: ["(1) 빵", "(2) 과일", "(3) 쿠키", "(4) 과자", "(5) 젤리"], answer: [1] },
+            { id: 3, title: "요일", q: "내가 가장 좋아하는 요일은?", options: ["(1) 월요일", "(2) 화요일", "(3) 수요일", "(4) 목요일", "(5) 금요일"], answer: [3] },
+            { id: 4, title: "색깔", q: "내가 좋아하는 색은?", options: ["(1) 주황색", "(2) 초록색", "(3) 갈색", "(4) 노란색", "(5) 보라색"], answer: [3] },
+            { id: 5, title: "캐릭터", q: "내가 좋아하는 캐릭터는? (정답 2개)", options: ["(1) 스티치", "(2) 몬치치", "(3) 토토로", "(4) 이요르", "(5) 마루"], answer: [1, 4], isMulti: true },
+            { id: 6, title: "계절", q: "내가 가장 좋아하고 기다리는 계절은?", options: ["(1) 봄", "(2) 여름", "(3) 가을", "(4) 겨울"], answer: [3] },
+            { id: 7, title: "취미", q: "내가 방과 후에 가장 즐겨 하는 취미 활동은?", options: ["(1) 음악 듣기", "(2) 운동하기", "(3) 그림 그리기", "(4) 게임하기", "(5) 책 읽기"], answer: [1] },
+            { id: 8, title: "동물", q: "내가 가장 귀여워하는 동물은?", options: ["(1) 강아지", "(2) 고양이", "(3) 햄스터", "(4) 토끼", "(5) 판다"], answer: [1] }
+        ];
+
+        // Slip Slips Rewards List
+        const slipRewardsOriginal = [
+            { id: 'reset', label: '초기화!', desc: '게임이 처음으로 돌아갑니다! 🔄' },
+            { id: 'color1', label: '한칸을 색칠해요!', desc: '퀴즈 없이 원하는 칸 1개를 색칠해요! 🎨' },
+            { id: 'boom1', label: '꽝!', desc: '아쉽게도 꽝입니다! 계속 진행해 봐요. 🎈' },
+            { id: 'color2', label: '두칸을 색칠해요!', desc: '퀴즈 없이 원하는 칸 2개에 ⭕ 표시해요! 🎨' },
+            { id: 'boom2', label: '꽝!', desc: '아쉽게도 꽝입니다! 계속 진행해 봐요. 🎈' }
+        ];
+
+        // State Tracking Variables
+        let clearedTiles = Array(9).fill(false);
+        let activeTileIndex = null;
+        let selectedAnswers = [];
+        let isLocked = false;
+        let totalBingoLines = 0;
+        let wrongAttempts = 0;
+
+        // Free selection chance count
+        let freeSelectQuota = 0;
+
+        // Winning Line Combinations (3x3 Bingo)
+        const bingoLines = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+            [0, 4, 8], [2, 4, 6]             // Diagonals
+        ];
+
+        function startGame() {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+        }
+
+        function restartGame() {
+            clearedTiles = Array(9).fill(false);
+            activeTileIndex = null;
+            selectedAnswers = [];
+            isLocked = false;
+            totalBingoLines = 0;
+            wrongAttempts = 0;
+            freeSelectQuota = 0;
+
+            // Reset Tiles UI
+            for (let i = 0; i < 9; i++) {
+                const btn = document.getElementById(`tile-${i}`);
+                btn.className = "bg-white hover:bg-pink-50 border-2 border-pink-200 rounded-xl flex flex-col items-center justify-center p-1 transition-all shadow-sm active:scale-95";
+                btn.innerHTML = `<span class="text-xs text-pink-400 font-bold">#${i + 1}</span><span class="text-sm sm:text-base font-bold text-gray-700">${bingoQuestions[i].title}</span>`;
+            }
+
+            document.getElementById('bingo-line-count').innerText = "0 / 2 줄";
+            document.getElementById('jiyu-status-text').innerText = "빙고 칸을 터치해봐! 👆";
+            
+            showPanelViews('idle');
+
+            document.getElementById('end-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+        }
+
+        // Helper to switch view inside top question panel
+        function showPanelViews(viewName) {
+            document.getElementById('question-idle-view').classList.add('hidden');
+            document.getElementById('question-active-view').classList.add('hidden');
+            document.getElementById('draw-prompt-view').classList.add('hidden');
+            document.getElementById('draw-slips-view').classList.add('hidden');
+            document.getElementById('free-select-view').classList.add('hidden');
+
+            if (viewName === 'idle') document.getElementById('question-idle-view').classList.remove('hidden');
+            if (viewName === 'active') document.getElementById('question-active-view').classList.remove('hidden');
+            if (viewName === 'draw-prompt') document.getElementById('draw-prompt-view').classList.remove('hidden');
+            if (viewName === 'draw-slips') document.getElementById('draw-slips-view').classList.remove('hidden');
+            if (viewName === 'free-select') document.getElementById('free-select-view').classList.remove('hidden');
+        }
+
+        // Tile Click Handler
+        function onTileClick(index) {
+            if (isLocked) return;
+
+            // Mode: Free selection chance active
+            if (freeSelectQuota > 0) {
+                if (clearedTiles[index]) {
+                    document.getElementById('jiyu-status-text').innerText = "이미 색칠된 칸이야! 다른 칸을 선택해줘!";
+                    return;
+                }
+                colorTileFree(index);
+                freeSelectQuota--;
+                if (freeSelectQuota > 0) {
+                    document.getElementById('free-select-desc').innerText = `한 칸 더 선택해 주세요! (남은 칸: ${freeSelectQuota}개)`;
+                } else {
+                    document.getElementById('jiyu-status-text').innerText = "찬스로 색칠 완료! ✨";
+                    showPanelViews('idle');
+                    checkBingo();
+                }
+                return;
+            }
+
+            // Normal Mode: Selected tile is already cleared
+            if (clearedTiles[index]) {
+                document.getElementById('jiyu-status-text').innerText = "이미 정답을 맞춘 칸이야! ✨";
+                return;
+            }
+
+            activeTileIndex = index;
+            selectedAnswers = [];
+            const qData = bingoQuestions[index];
+
+            document.getElementById('jiyu-status-text').innerText = `#${index + 1}번 '${qData.title}' 문제를 맞춰봐!`;
+
+            showPanelViews('active');
+            document.getElementById('q-number-badge').innerText = `#${index + 1}번 ${qData.title} 문제`;
+            document.getElementById('q-text').innerText = qData.q;
+            document.getElementById('quiz-feedback-text').innerText = "";
+
+            const container = document.getElementById('q-options-container');
+            container.innerHTML = "";
+
+            const submitBtn = document.getElementById('q-multi-submit');
+            if (qData.isMulti) {
+                submitBtn.classList.remove('hidden');
+            } else {
+                submitBtn.classList.add('hidden');
+            }
+
+            qData.options.forEach((optStr, optIdx) => {
+                const optNum = optIdx + 1;
+                const btn = document.createElement('button');
+                btn.type = "button";
+                btn.className = "w-full text-left px-3 py-1.5 rounded-lg border border-indigo-200 bg-white text-gray-700 text-xs sm:text-sm font-bold hover:bg-indigo-50 transition-all flex justify-between items-center";
+                btn.innerHTML = `<span>${optStr}</span><span class="check-icon opacity-0 text-purple-600 font-bold">✓</span>`;
+
+                btn.onclick = () => selectOption(optNum, btn, qData.isMulti);
+                container.appendChild(btn);
+            });
+        }
+
+        function selectOption(optNum, btnElement, isMulti) {
+            if (isLocked) return;
+
+            if (!isMulti) {
+                const allBtns = document.querySelectorAll('#q-options-container button');
+                allBtns.forEach(b => b.className = "w-full text-left px-3 py-1.5 rounded-lg border border-indigo-200 bg-white text-gray-700 text-xs sm:text-sm font-bold");
+                btnElement.className = "w-full text-left px-3 py-1.5 rounded-lg border-2 border-indigo-500 bg-indigo-100 text-indigo-900 text-xs sm:text-sm font-bold";
+
+                checkSingleAnswer(optNum);
+            } else {
+                if (selectedAnswers.includes(optNum)) {
+                    selectedAnswers = selectedAnswers.filter(n => n !== optNum);
+                    btnElement.className = "w-full text-left px-3 py-1.5 rounded-lg border border-indigo-200 bg-white text-gray-700 text-xs sm:text-sm font-bold";
+                    btnElement.querySelector('.check-icon').classList.add('opacity-0');
+                } else {
+                    if (selectedAnswers.length < 2) {
+                        selectedAnswers.push(optNum);
+                        btnElement.className = "w-full text-left px-3 py-1.5 rounded-lg border-2 border-purple-500 bg-purple-100 text-purple-900 text-xs sm:text-sm font-bold";
+                        btnElement.querySelector('.check-icon').classList.remove('opacity-0');
+                    }
+                }
+            }
+        }
+
+        function checkSingleAnswer(selectedNum) {
+            isLocked = true;
+            const qData = bingoQuestions[activeTileIndex];
+
+            if (qData.answer.includes(selectedNum)) {
+                handleCorrect();
+            } else {
+                handleWrong();
+            }
+        }
+
+        function checkMultiAnswer() {
+            if (isLocked) return;
+            const qData = bingoQuestions[activeTileIndex];
+
+            if (selectedAnswers.length !== qData.answer.length) {
+                document.getElementById('quiz-feedback-text').innerText = "정답 2개를 선택해 주세요!";
+                return;
+            }
+
+            isLocked = true;
+            const isCorrect = qData.answer.every(ans => selectedAnswers.includes(ans));
+            if (isCorrect) {
+                handleCorrect();
+            } else {
+                handleWrong();
+            }
+        }
+
+        function handleCorrect() {
+            document.getElementById('quiz-feedback-text').innerText = "맞았어요!!! 🥳";
+            document.getElementById('jiyu-status-text').innerText = "우와! 정답이야! ⭐";
+            triggerConfetti();
+
+            // Mark tile
+            markTileCleared(activeTileIndex, "⭐");
+
+            setTimeout(() => {
+                isLocked = false;
+                checkBingo();
+
+                // Proceed to Lucky Draw Prompt
+                showPanelViews('draw-prompt');
+            }, 1200);
+        }
+
+        function handleWrong() {
+            wrongAttempts++;
+            document.getElementById('quiz-feedback-text').innerText = "다시 골라 주세요!";
+            document.getElementById('jiyu-status-text').innerText = "아쉬워요! 다시 도전해봐! 😓";
+            showFailEmoji();
+
+            // Check if too many mistakes made
+            if (wrongAttempts >= 7) {
+                setTimeout(() => {
+                    alert("다시 해보자! 😓 문제가 너무 많이 틀려서 처음으로 돌아갑니다.");
+                    restartGame();
+                }, 3000);
+                return;
+            }
+
+            setTimeout(() => {
+                isLocked = false;
+                document.getElementById('quiz-feedback-text').innerText = "";
+            }, 3000);
+        }
+
+        // Lucky Draw System Logic
+        function skipLuckyDraw() {
+            showPanelViews('idle');
+            document.getElementById('jiyu-status-text').innerText = "다음 칸을 터치해 주세요!";
+        }
+
+        function startLuckyDraw() {
+            showPanelViews('draw-slips');
+            document.getElementById('draw-instruction-text').innerText = "맘에 드는 쪽지를 1개 선택하세요! ✉️";
+            
+            // Shuffle Rewards Array
+            const shuffled = [...slipRewardsOriginal].sort(() => Math.random() - 0.5);
+
+            const container = document.getElementById('slips-container');
+            container.innerHTML = "";
+
+            shuffled.forEach((reward, i) => {
+                const card = document.createElement('div');
+                card.className = "slip-card h-20 w-full";
+                card.innerHTML = `
+                    <div class="slip-card-inner relative w-full h-full text-center">
+                        <div class="slip-front absolute inset-0 bg-gradient-to-b from-amber-200 to-amber-300 border-2 border-amber-400 rounded-xl flex flex-col items-center justify-center p-1 shadow-md">
+                            <span class="text-xl">✉️</span>
+                            <span class="text-[10px] font-bold text-amber-900">쪽지 ${i+1}</span>
+                        </div>
+                        <div class="slip-back absolute inset-0 bg-white border-2 border-pink-400 rounded-xl flex flex-col items-center justify-center p-1 shadow-md text-pink-600 font-bold text-xs leading-tight">
+                            <span>${reward.label}</span>
+                        </div>
+                    </div>
+                `;
+
+                card.onclick = () => revealSlip(card, reward);
+                container.appendChild(card);
+            });
+        }
+
+        function revealSlip(cardElement, reward) {
+            if (isLocked) return;
+            isLocked = true;
+
+            cardElement.classList.add('flipped');
+            document.getElementById('draw-instruction-text').innerText = reward.desc;
+            document.getElementById('jiyu-status-text').innerText = `결과: [${reward.label}]`;
+
+            setTimeout(() => {
+                isLocked = false;
+                processReward(reward);
+            }, 1800);
+        }
+
+        function processReward(reward) {
+            if (reward.id === 'reset') {
+                alert("초기화 쪽지를 뽑았어요! 처음부터 다시 시작합니다. 🔄");
+                restartGame();
+            } else if (reward.id === 'boom1' || reward.id === 'boom2') {
+                showPanelViews('idle');
+                document.getElementById('jiyu-status-text').innerText = "꽝! 다음 칸에 도전해 봐요!";
+            } else if (reward.id === 'color1') {
+                startFreeSelectMode(1, "한 칸을 퀴즈 없이 바로 색칠해 드려요! 원하는 칸을 누르세요.");
+            } else if (reward.id === 'color2') {
+                startFreeSelectMode(2, "두 칸을 퀴즈 없이 ⭕ 표시해 드려요! 원하시는 칸 2개를 누르세요.");
+            }
+        }
+
+        function startFreeSelectMode(quota, desc) {
+            // Check remaining uncolored tiles
+            const uncoloredCount = clearedTiles.filter(t => t === false).length;
+            if (uncoloredCount === 0) {
+                showPanelViews('idle');
+                checkBingo();
+                return;
+            }
+
+            freeSelectQuota = Math.min(quota, uncoloredCount);
+            showPanelViews('free-select');
+            document.getElementById('free-select-title').innerText = `🎨 찬스 사용 중! (${freeSelectQuota}칸 가능)`;
+            document.getElementById('free-select-desc').innerText = desc;
+            document.getElementById('jiyu-status-text').innerText = "색칠할 칸을 선택해 주세요!";
+        }
+
+        function colorTileFree(tileIdx) {
+            markTileCleared(tileIdx, "⭕");
+            triggerConfetti();
+        }
+
+        function markTileCleared(tileIdx, symbol) {
+            clearedTiles[tileIdx] = true;
+            const tileBtn = document.getElementById(`tile-${tileIdx}`);
+            tileBtn.className = "bingo-tile-cleared rounded-xl flex flex-col items-center justify-center p-1 font-bold text-white shadow-md";
+            tileBtn.innerHTML = `<span class="text-xl">${symbol}</span><span class="text-xs sm:text-sm">${bingoQuestions[tileIdx].title}</span>`;
+        }
+
+        function checkBingo() {
+            let lines = 0;
+            bingoLines.forEach(line => {
+                if (clearedTiles[line[0]] && clearedTiles[line[1]] && clearedTiles[line[2]]) {
+                    lines++;
+                }
+            });
+
+            totalBingoLines = lines;
+            document.getElementById('bingo-line-count').innerText = `${totalBingoLines} / 2 줄`;
+
+            if (totalBingoLines >= 2) {
+                setTimeout(() => {
+                    document.getElementById('game-screen').classList.add('hidden');
+                    document.getElementById('end-screen').classList.remove('hidden');
+                }, 800);
+            }
+        }
+
+        function triggerConfetti() {
+            const card = document.getElementById('app-card');
+            for (let i = 0; i < 12; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti-emoji';
+                confetti.innerText = '🥳';
+                confetti.style.left = Math.random() * 80 + 10 + '%';
+                confetti.style.top = '20%';
+                confetti.style.animationDelay = Math.random() * 0.3 + 's';
+                card.appendChild(confetti);
+
+                setTimeout(() => confetti.remove(), 1600);
+            }
+        }
+
+        function showFailEmoji() {
+            const overlay = document.getElementById('fail-emoji-overlay');
+            overlay.classList.remove('hidden');
+
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>나에 대한 퀴즈</title>
+<style>
+:root{--bg:#fff8ee;--fg:#2a2118;--card:#fff;--ac:#ff6b35;--ok:#1f9d55;--bad:#d64545;--bd:#e6d9c6;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d1a16;--fg:#f4ece0;--card:#2a251f;--bd:#443b30}}
+:root[data-theme="dark"]{--bg:#1d1a16;--fg:#f4ece0;--card:#2a251f;--bd:#443b30}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;display:flex;justify-content:center}
+#app{width:100%;max-width:480px;padding:20px 16px 40px}
+.prog{height:8px;background:var(--bd);border-radius:8px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--ac);transition:width .3s}
+.num{margin:14px 0 4px;font-size:14px;opacity:.7}
+h1{font-size:21px;line-height:1.4;margin:0 0 6px}
+.hint{font-size:13px;opacity:.7;margin-bottom:12px}
+.opt{display:block;width:100%;text-align:left;padding:14px;margin:8px 0;border:2px solid var(--bd);background:var(--card);color:var(--fg);border-radius:12px;font-size:16px}
+.opt.on{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 15%,var(--card))}
+#go{width:100%;margin-top:12px;padding:14px;border:0;border-radius:12px;background:var(--ac);color:#fff;font-size:17px;font-weight:700}
+#go:disabled{opacity:.4}
+#msg{min-height:40px;margin-top:14px;font-size:22px;font-weight:800;text-align:center}
+.ok{color:var(--ok)}.bad{color:var(--bad)}
+.end{text-align:center;padding-top:60px}
+.end .y{font-size:72px;font-weight:900;color:var(--ac);animation:p .5s infinite alternate}
+@keyframes p{to{transform:scale(1.2) rotate(-4deg)}}
+.end button{margin-top:24px;padding:12px 20px;border:0;border-radius:12px;background:var(--ac);color:#fff;font-size:16px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// 정답은 ans 배열(선택지 번호, 0부터)입니다. 11~15번 정답은 임시값이니 필요하면 바꿔주세요.
+const Q=[
+{q:"가장 최근에 푹 빠진 취미나 관심사는?",o:["드럼","독서","야구","그림","골프","요리"],a:[0,2,4]},
+{q:"무인도에 가져갈 물건 3가지는? (4개 선택)",o:["라이터","스마트폰","휴대용 칼","헤어드라이어","긴 도끼","게임기","낚시대","우산"],a:[0,2,4,6]},
+{q:"가보고 싶은 여행지 한 곳은?",o:["일본","미국","프랑스","호주","태국","이탈리아"],a:[0]},
+{q:"가장 좋아하는 음식은 뭐예요?",o:["피자","햄버거","치킨","라면","초밥","삼겹살"],a:[1]},
+{q:"가장 좋아하는 주식은?",o:["삼성전자","테슬라","엔비디아","비트코인","애플","금"],a:[3]},
+{q:"하루 중 가장 좋아하는 시간대는?",o:["아침","점심","오후","저녁","밤","새벽"],a:[2,3]},
+{q:"스트레스 받을 때 가장 하고 싶은 것은?",o:["맛있는 음식 먹기","혼자 있기","운동하기","게임하기","친구 만나기","잠자기"],a:[3]},
+{q:"내가 가장 중요하게 생각하는 것은?",o:["돈","건강","가족","친구","자유","성공"],a:[2]},
+{q:"갑자기 1,000만 원이 생긴다면 가장 먼저 할 것은?",o:["저축한다","주식에 투자한다","여행을 간다","사고 싶었던 것을 산다","맛있는 것을 먹는다","취미에 쓴다"],a:[0]},
+{q:"내가 가장 자신 있다고 생각하는 것은?",o:["운동","요리","게임","말하기","집중력","기억력"],a:[2]},
+{q:"나는 어느 쪽에 더 가까울까?",o:["아침형","저녁형","둘 다 아님"],a:[1]},
+{q:"쉬는 날 가장 하고 싶은 것은?",o:["집에서 푹 쉬기","운동·취미 활동","친구 만나기","맛집 가기","드라이브·여행","게임하기"],a:[5]},
+{q:"가장 좋아하는 계절은?",o:["봄","여름","가을","겨울"],a:[2]},
+{q:"내가 가장 못 참는 것은?",o:["기다리기","더위","잔소리","거짓말","배고픔","지각"],a:[0]},
+{q:"10년 뒤 가장 이루고 싶은 것은?",o:["경제적 자유","가족과 행복한 삶","좋아하는 일로 성공","세계 여행","건강한 몸","취미를 전문가 수준으로"],a:[1]}
+];
+const app=document.getElementById("app");
+let i=0,sel=new Set(),busy=false,ac=null;
+
+function render(){
+  const q=Q[i],multi=q.a.length>1;
+  sel=new Set();busy=false;
+  app.innerHTML=`<div class="prog"><i style="width:${(i/Q.length)*100}%"></i></div>
+  <div class="num">${i+1} / ${Q.length}</div>
+  <h1>${q.q}</h1>
+  <div class="hint">${multi?`정답 ${q.a.length}개를 고르세요`:"하나만 고르세요"}</div>
+  ${q.o.map((t,k)=>`<button class="opt" data-k="${k}">${"①②③④⑤⑥⑦⑧"[k]} ${t}</button>`).join("")}
+  <button id="go" disabled>확인</button><div id="msg"></div>`;
+  app.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{
+    if(busy)return;const k=+b.dataset.k;
+    if(multi){sel.has(k)?sel.delete(k):sel.add(k);b.classList.toggle("on")}
+    else{sel=new Set([k]);app.querySelectorAll(".opt").forEach(x=>x.classList.remove("on"));b.classList.add("on")}
+    document.getElementById("go").disabled=sel.size!==q.a.length;
+  });
+  document.getElementById("go").onclick=check;
+}
+function check(){
+  if(busy)return;const q=Q[i],last=i===Q.length-1,m=document.getElementById("msg");
+  const right=sel.size===q.a.length&&q.a.every(x=>sel.has(x));
+  busy=true;
+  if(right){
+    m.className="ok";m.textContent="잘했노! 🎉";
+    setTimeout(()=>{last?finish():(i++,render())},900);
+  }else{
+    m.className="bad";
+    const ans=q.a.map(k=>q.o[k]).join(", ");
+    app.querySelectorAll(".opt").forEach((b,k)=>{if(q.a.includes(k)){b.style.borderColor="var(--ok)";b.style.background="color-mix(in srgb,var(--ok) 20%,var(--card))"}});
+    if(last){m.innerHTML=`틀렸어! 😛<div style="font-size:16px;margin-top:6px">정답: ${ans}</div><div style="font-size:18px;margin-top:6px">처음으로~ 🔙</div>`;setTimeout(()=>{i=0;render()},3000)}
+    else{m.innerHTML=`틀렸어! 😛<div style="font-size:16px;margin-top:6px">정답: ${ans}</div>`;setTimeout(()=>{i++;render()},2200)}
+  }
+}
+function finish(){
+  app.innerHTML=`<div class="end"><div style="font-size:20px;font-weight:700">전부 맞췄다!</div><div class="y">요이!</div><button id="re">다시 하기</button></div>`;
+  document.getElementById("re").onclick=()=>{stopSong();i=0;render()};
+  playSong();
+}
+// 신나는 쌈@뽕 신스 멜로디 (파일 없이 직접 합성)
+function playSong(){
+  try{
+    ac=new (window.AudioContext||window.webkitAudioContext)();
+    const f={C:523.25,D:587.33,E:659.25,G:783.99,A:880,c:261.63,g:196,a:220,f:174.61};
+    const mel="E E G E A G E D C D E E G A A G E G A E G A C C".split(" ");
+    const bass="c c g g a a f f".split(" ");
+    let t=ac.currentTime+.1;const step=.16;
+    for(let r=0;r<4;r++)mel.forEach((n,k)=>{
+      const o=ac.createOscillator(),g=ac.createGain();
+      o.type="square";o.frequency.value=f[n];
+      g.gain.setValueAtTime(.12,t);g.gain.exponentialRampToValueAtTime(.001,t+step*.9);
+      o.connect(g).connect(ac.destination);o.start(t);o.stop(t+step);
+      if(k%3===0){const b=ac.createOscillator(),bg=ac.createGain();
+        b.type="sawtooth";b.frequency.value=f[bass[(k/3|0)%8]];
+        bg.gain.setValueAtTime(.15,t);bg.gain.exponentialRampToValueAtTime(.001,t+step*2.5);
+        b.connect(bg).connect(ac.destination);b.start(t);b.stop(t+step*2.6)}
+      t+=step;
+    });
+  }catch(e){}
+}
+function stopSong(){try{ac&&ac.close()}catch(e){}}
+render();
+</script>
+</body>
+</html>

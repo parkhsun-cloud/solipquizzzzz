@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>유쾌한 밈 배경 16관문 극악 퀴즈</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; user-select: none; }
+    body, html { width: 100%; height: 100%; overflow: hidden; background: #05050f; color: #fff; }
+    
+    /* 배경 캔버스 */
+    #bgCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+
+    /* 메인 컨테이너 */
+    .app-container {
+      position: relative; z-index: 10; width: 100%; height: 100%;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      padding: 16px; background: rgba(5, 5, 15, 0.4); backdrop-filter: blur(3px);
+    }
+
+    /* 상단 타이머 및 진행바 HUD */
+    .hud-bar {
+      position: absolute; top: 16px; left: 16px; right: 16px;
+      display: flex; justify-content: space-between; align-items: center;
+      pointer-events: none;
+    }
+    .timer-badge {
+      background: rgba(15, 23, 42, 0.9); border: 2px solid #38bdf8;
+      padding: 6px 14px; border-radius: 8px; font-size: 14px; font-weight: 800;
+      color: #38bdf8; box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+    }
+    .gate-badge {
+      background: rgba(245, 158, 11, 0.2); border: 2px solid #f59e0b;
+      padding: 6px 14px; border-radius: 8px; font-size: 14px; font-weight: 800;
+      color: #fbbf24; box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+    }
+
+    /* 퀴즈 카드 인터페이스 */
+    .card {
+      background: rgba(15, 23, 42, 0.92); border: 2px solid rgba(56, 189, 248, 0.5);
+      border-radius: 20px; padding: 28px 24px; width: 100%; max-width: 480px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 20px rgba(56, 189, 248, 0.2);
+      backdrop-filter: blur(16px); transition: transform 0.2s, border-color 0.2s;
+    }
+    .card.shake {
+      animation: shake 0.4s ease-in-out;
+      border-color: #ef4444;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-10px); }
+      40%, 80% { transform: translateX(10px); }
+    }
+
+    .q-title {
+      font-size: 18px; font-weight: 700; color: #f8fafc; line-height: 1.5;
+      margin-bottom: 20px; word-break: keep-all;
+    }
+
+    .opt-btn {
+      width: 100%; padding: 14px 18px; margin-bottom: 10px;
+      background: rgba(30, 41, 59, 0.85); border: 1.5px solid rgba(71, 85, 105, 0.6);
+      border-radius: 12px; color: #f1f5f9; text-align: left; font-size: 15px; font-weight: 600;
+      cursor: pointer; transition: all 0.15s ease-in-out; outline: none;
+    }
+    .opt-btn:hover { background: rgba(51, 65, 85, 0.95); border-color: #38bdf8; transform: translateY(-2px); }
+    .opt-btn.selected { background: #0284c7; border-color: #38bdf8; color: #ffffff; box-shadow: 0 0 10px rgba(56,189,248,0.5); }
+
+    .submit-btn {
+      width: 100%; padding: 14px; margin-top: 10px;
+      background: #16a34a; border: none; border-radius: 12px;
+      color: white; font-weight: 800; font-size: 16px; cursor: pointer;
+      display: none; box-shadow: 0 0 15px rgba(22, 163, 74, 0.4);
+      transition: background 0.2s;
+    }
+    .submit-btn:hover { background: #15803d; }
+
+    .penalty-msg {
+      color: #ef4444; font-size: 14px; font-weight: 800; margin-top: 14px;
+      text-align: center; display: none; background: rgba(239, 68, 68, 0.15);
+      padding: 8px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.4);
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="bgCanvas"></canvas>
+
+<div class="app-container">
+  <div class="hud-bar">
+    <div class="timer-badge" id="timerTxt">⏱️ 00:00</div>
+    <div class="gate-badge" id="gateTag">GATE 1 / 16</div>
+  </div>
+
+  <div class="card" id="quizCard">
+    <div class="q-title" id="qTitle">질문 불러오는 중...</div>
+    <div id="qOpts"></div>
+    <button class="submit-btn" id="qSubmit">정답 제출하기</button>
+    <div class="penalty-msg" id="penaltyMsg">⚠️ 오답 페널티! <span id="penaltySec">10</span>초간 대기하세요.</div>
+  </div>
+</div>
+
+<script>
+  // 16개 퀴즈 문항 및 정답 정의
+  const QUIZZES = {
+    1: { title: "1. 내가 좋아하는 사람 모두 골라라!", opts: ["마이클잭슨", "미스터비스트", "벙구", "티앤티밍"], ans: [0,1,2,3], multi: true },
+    2: { title: "2. 2067년에 멸종할 동물은?", opts: ["코브라 카이", "티라노 강아지", "말파리", "스마일 앵무새", "후후 샹훼이"], ans: 4 },
+    3: { title: "3. 가장 좋아하는 노래는?", opts: ["빌리진", "노 반디토", "따징따하 징다하", "super idol"], ans: 2 },
+    4: { title: "4. 지금 보고 있는 애니는?", opts: ["괴수 8호", "모브 사이코 100", "주술회전", "마슐"], ans: 0 },
+    5: { title: "5. 좋아하는 것을 모두 골라라!", opts: ["67", "미스터비스트 댄스", "중국 당구", "헬리콥터"], ans: [1,2], multi: true },
+    6: { title: "6. 가장 좋아하는 음료수는?", opts: ["파워 에이드", "밀키스", "사이다", "뽀로로 주스"], ans: 1 },
+    7: { title: "7. 가장 좋아하는 음식은?", opts: ["두바이 초콜릿 먹는 햄스터", "고추 튀김", "유기농 배추", "비둘기 튀김"], ans: 2 },
+    8: { title: "8. 가장 좋아하는 숫자는?", opts: ["67", "61", "69", "62"], ans: 0 },
+    9: { title: "9. 가장 좋아하는 것을 고르세요.", opts: ["피자", "치킨", "밀키스", "헬리콥터 헬리콥터 헬리콥터"], ans: 'any' },
+    10: { title: "10. 내 혈액형은 무엇일까?", opts: ["A형", "B형", "AB형", "O형"], ans: 1 },
+    11: { title: "11. 내가 가장 많이 웃은 밈은?", opts: ["몸에 좋아지는 자세", "히히하하1탄", "히히하하2탄", "67"], ans: 'any' },
+    12: { title: "12. 내가 가장 좋아하는 레찌 아저씨 밈은?", opts: ["레블록스", "코브라 카이", "해리 파쿠르", "조로", "미스터 비스트의 홀리데이"], ans: 4 },
+    13: { title: "13. 내가 다니지 않는 학원은?", opts: ["미술", "수학", "영어", "컴퓨터"], ans: 2 }, // 영어 (Option 2)
+    14: { title: "14. 내가 가장 좋아하는 한국어 비트박스는?", opts: ["강남역", "불났나봐", "붕어덮밥", "제왚피"], ans: 2 }, // 붕어덮밥 (Option 2)
+    15: { title: "15. 내가 가장 좋아하는 축구 선수는?", opts: ["호날두", "메시", "미스터비스트", "아이쇼 스피드"], ans: 0 },
+    16: { title: "16. 내가 가장 좋아하는 유튜버는?", opts: ["잠뜰", "벙구", "미스터 비스트", "체스터"], ans: 1 }
+  };
+
+  let currentGate = 1;
+  let startTime = Date.now();
+  let lockUntil = 0;
+  let selectedMulti = new Set();
+
+  // 캔버스 배경 애니메이션 설정 (두바이 초콜릿 햄스터, 헬리콥터, 네온 큐브)
+  const canvas = document.getElementById('bgCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+  window.addEventListener('resize', resizeCanvas); resizeCanvas();
+
+  const faces = ["( ͡° ͜ʖ ͡°)", "(⊙_⊙)", "(•_•)", "🐶", "🚁", "🐹", "🍫", "🍕"];
+  const particles = Array.from({length: 32}, () => ({
+    x: Math.random() * window.innerWidth,
+    y: Math.random() * window.innerHeight,
+    sz: Math.random() * 24 + 16,
+    vx: (Math.random() - 0.5) * 1.5,
+    vy: (Math.random() - 0.5) * 1.5,
+    face: faces[Math.floor(Math.random() * faces.length)],
+    rot: Math.random() * Math.PI * 2,
+    vr: (Math.random() - 0.5) * 0.05
+  }));
+
+  function drawMemeBg() {
+    ctx.fillStyle = '#050512';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // 격자 그리기
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.08)';
+    ctx.lineWidth = 1;
+    for(let x = 0; x < canvas.width; x += 40) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x, canvas.height); ctx.stroke(); }
+    for(let y = 0; y < canvas.height; y += 40) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(canvas.width, y); ctx.stroke(); }
+
+    // 움직이는 밈 입자들
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+      if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+      if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = 'rgba(30, 41, 59, 0.7)';
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2;
+      ctx.fillRect(-p.sz/2, -p.sz/2, p.sz, p.sz);
+      ctx.strokeRect(-p.sz/2, -p.sz/2, p.sz, p.sz);
+      
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `${p.sz * 0.5}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(p.face, 0, 0);
+      ctx.restore();
+    });
+
+    requestAnimationFrame(drawMemeBg);
+  }
+  drawMemeBg();
+
+  // 타이머 및 페널티 카운트다운
+  setInterval(() => {
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    document.getElementById('timerTxt').innerText = 
+      `⏱️ ${String(Math.floor(elapsed/60)).padStart(2,'0')}:${String(elapsed%60).padStart(2,'0')}`;
+
+    const now = Date.now();
+    if (now < lockUntil) {
+      const leftSec = Math.ceil((lockUntil - now) / 1000);
+      document.getElementById('penaltySec').innerText = leftSec;
+      document.getElementById('penaltyMsg').style.display = 'block';
+    } else {
+      document.getElementById('penaltyMsg').style.display = 'none';
+    }
+  }, 200);
+
+  // 퀴즈 렌더링
+  function renderGate() {
+    selectedMulti.clear();
+    const q = QUIZZES[currentGate];
+    document.getElementById('gateTag').innerText = `GATE ${currentGate} / 16`;
+    document.getElementById('qTitle').innerText = q.title;
+
+    const optsDiv = document.getElementById('qOpts');
+    optsDiv.innerHTML = '';
+    const submitBtn = document.getElementById('qSubmit');
+    submitBtn.style.display = q.multi ? 'block' : 'none';
+
+    q.opts.forEach((opt, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'opt-btn';
+      btn.innerText = `${idx + 1}. ${opt}`;
+      btn.onclick = () => {
+        if (Date.now() < lockUntil) return;
+        if (q.multi) {
+          if (selectedMulti.has(idx)) { selectedMulti.delete(idx); btn.classList.remove('selected'); }
+          else { selectedMulti.add(idx); btn.classList.add('selected'); }
+        } else {
+          checkAnswer(idx);
+        }
+      };
+      optsDiv.appendChild(btn);
+    });
+
+    submitBtn.onclick = () => {
+      if (Date.now() < lockUntil) return;
+      checkAnswer(Array.from(selectedMulti));
+    };
+  }
+
+  // 정답 확인 및 검증
+  function checkAnswer(userAns) {
+    const q = QUIZZES[currentGate];
+    let correct = false;
+
+    if (q.ans === 'any') correct = true;
+    else if (q.multi) correct = (q.ans.sort().join(',') === userAns.sort().join(','));
+    else correct = (q.ans === userAns);
+
+    if (correct) {
+      if (currentGate === 16) {
+        const totalSec = Math.floor((Date.now() - startTime) / 1000);
+        alert(`🎉 축하합니다! 16개 관문을 모두 클리어하셨습니다!\n최종 소요 시간: ${totalSec}초`);
+        location.reload();
+      } else {
+        currentGate++;
+        renderGate();
+      }
+    } else {
+      // 오답 처리 (10초 페널티 + 흔들림 효과)
+      lockUntil = Date.now() + 10000;
+      const card = document.getElementById('quizCard');
+      card.classList.add('shake');
+      setTimeout(() => card.classList.remove('shake'), 400);
+    }
+  }
+
+  renderGate();
+</script>
+</body>
+</html>

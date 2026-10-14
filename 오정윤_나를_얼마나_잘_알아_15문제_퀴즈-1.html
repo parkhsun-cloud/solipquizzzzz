@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>나를 얼마나 잘 알아? 15문제</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;padding:18px;
+  font-family:Arial,"Noto Sans KR",sans-serif;
+  background:linear-gradient(135deg,#dff5ff,#f4e8ff,#fff3d6);
+  color:#20242b;
+}
+.wrap{max-width:760px;margin:auto}
+.card{
+  background:#fff;border-radius:24px;padding:22px;margin:14px 0;
+  box-shadow:0 12px 35px #0002
+}
+h1{text-align:center;margin:0 0 6px;font-size:30px}
+.sub{text-align:center;color:#687080}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.stat{background:#f2f6ff;border-radius:15px;padding:10px;text-align:center;font-weight:bold}
+.stat b{display:block;font-size:20px;margin-top:3px}
+.progress{height:13px;background:#e9edf2;border-radius:20px;overflow:hidden;margin-top:15px}
+.bar{height:100%;width:0;background:linear-gradient(90deg,#6b5cff,#00a7ff);transition:.3s}
+#question{font-size:23px;line-height:1.45}
+.option{
+  display:block;width:100%;border:0;border-radius:15px;
+  background:#f1f4f8;padding:15px;margin:9px 0;
+  font-size:17px;text-align:left;cursor:pointer
+}
+.option:hover{background:#e4efff}
+.option:disabled{cursor:default;opacity:.9}
+.shop{background:#fff9e7;border:2px dashed #efc34d;border-radius:18px;padding:15px;margin-top:18px}
+button.action{
+  border:0;border-radius:12px;padding:11px 14px;
+  background:#315cff;color:white;font-weight:bold;cursor:pointer;margin:4px
+}
+button.action:disabled{opacity:.4;cursor:not-allowed}
+#message{min-height:28px;font-weight:bold}
+.small{font-size:13px;color:#747b86}
+.hidden{display:none}
+.result{text-align:center;font-size:19px}
+.big{font-size:38px;font-weight:900}
+.tag{display:inline-block;background:#222;color:#fff;border-radius:99px;padding:6px 12px;font-size:13px}
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+<div class="card">
+  <h1>🕵️ 나를 얼마나 잘 알아?</h1>
+  <p class="sub">15문제 초고난도 자기소개 퀴즈</p>
+  <div style="text-align:center"><span class="tag">친구에게 도전시키기 가능!</span></div>
+  <br>
+  <div class="stats">
+    <div class="stat">문제<b id="num">1</b></div>
+    <div class="stat">❤️ 기회<b id="lives">3</b></div>
+    <div class="stat">🪙 코인<b id="coins">0</b></div>
+    <div class="stat">🏆 점수<b id="score">0</b></div>
+  </div>
+  <div class="progress"><div class="bar" id="bar"></div></div>
+</div>
+
+<div class="card" id="game">
+  <h2 id="question"></h2>
+  <div id="options"></div>
+  <p id="message"></p>
+
+  <div class="shop">
+    <h3>🛒 비밀 상점</h3>
+    <button class="action" id="hintBtn" onclick="buyHint()">💡 힌트권 200🪙</button>
+    <button class="action" id="lifeBtn" onclick="buyLife()">❤️ 기회 +1 300🪙</button>
+    <button class="action" id="doubleBtn" onclick="buyDouble()">🔥 코인 2배권 400🪙</button>
+    <p class="small">2배권을 쓰고 다음 문제를 맞히면 300코인을 받아요.</p>
+  </div>
+</div>
+
+<div class="card hidden" id="end">
+  <div class="result">
+    <h2 id="endTitle"></h2>
+    <p id="final"></p>
+    <button class="action" onclick="restart()">🔄 다시 시작</button>
+  </div>
+</div>
+
+</div>
+
+<script>
+const questions = [
+  {
+    q:"내가 가장 많이 쓰는 말로 내가 직접 정해 놓은 표현은?",
+    a:["레알","리얼","릐얼","이얼"],
+    c:0,
+    h:"네 표현의 첫 번째를 떠올려 보세요."
+  },
+  {
+    q:"'레알'이라는 말을 가장 많이 쓰는 사람이라면, 다음 중 정확히 같은 표기는?",
+    a:["리얼","레알","릐얼","이얼"],
+    c:1,
+    h:"첫 글자는 ㄹ, 두 번째 글자는 ㅔ예요."
+  },
+  {
+    q:"내가 제일 먼저 찾는 것 4가지 중 정답은?",
+    a:["집","휴대폰","가족","돈"],
+    c:0,
+    h:"사람이나 물건이 아니라 장소예요."
+  },
+  {
+    q:"내가 제일 싫어하는 곳을 고르면?",
+    a:["학교","학원","도서관","공원"],
+    c:0,
+    h:"학교와 학원 중 하나를 골라야 해요."
+  },
+  {
+    q:"내가 제일 좋아하는 음식은?",
+    a:["미역국","가지 볶음","떡볶이","김치찌개"],
+    c:0,
+    h:"국 종류이고 이름에 바다에서 나는 재료가 들어가요."
+  },
+  {
+    q:"내가 제일 싫어하는 음식은?",
+    a:["불고기","잡채","가지 볶음","미역국"],
+    c:2,
+    h:"보라색 채소가 들어간 볶음 반찬이에요."
+  },
+  {
+    q:"우리 반 이름을 정확하게 고르면?",
+    a:["솔입반","소님반","솔닙반","솔잎반"],
+    c:3,
+    h:"소나무를 뜻하는 '솔' 뒤에 나뭇잎의 '잎'이 붙어요."
+  },
+  {
+    q:"우리 반 이름에서 '솔'은 무엇과 가장 관련이 있을까?",
+    a:["소나무","바다","구름","자동차"],
+    c:0,
+    h:"푸른 나무를 떠올려 보세요."
+  },
+  {
+    q:"내 가족 인원수 설정의 범위는?",
+    a:["1명~5명","1명~6명","1명~8명","2명~8명"],
+    c:2,
+    h:"가장 작은 숫자와 가장 큰 숫자를 생각해 보세요."
+  },
+  {
+    q:"다음 중 지금까지의 정보를 모두 고려했을 때 맞는 조합은?",
+    a:[
+      "미역국 + 솔잎반",
+      "가지 볶음 + 솔잎반",
+      "미역국 + 솔입반",
+      "가지 볶음 + 소님반"
+    ],
+    c:0,
+    h:"좋아하는 음식과 반 이름을 각각 정확하게 기억하세요."
+  },
+  {
+    q:"친구가 '내가 제일 먼저 찾는 게 돈이지?'라고 물었다. 정답은?",
+    a:["맞아","아니야, 집이야","아니야, 휴대폰이야","아니야, 가족이야"],
+    c:1,
+    h:"돈보다 먼저 찾는다고 정한 장소를 떠올려 보세요."
+  },
+  {
+    q:"다음 중 내가 싫어하는 음식과 좋아하는 음식을 거꾸로 적은 것은?",
+    a:[
+      "가지 볶음 → 미역국",
+      "미역국 → 가지 볶음",
+      "미역국 → 미역국",
+      "가지 볶음 → 가지 볶음"
+    ],
+    c:1,
+    h:"화살표의 왼쪽과 오른쪽이 각각 무엇을 뜻하는지 생각해 보세요."
+  },
+  {
+    q:"내가 가장 많이 쓰는 말의 후보가 '레알, 리얼, 릐얼, 이얼'이라면 내가 정한 말과 다른 것은 몇 개일까?",
+    a:["1개","2개","3개","4개"],
+    c:2,
+    h:"네 개 중 내가 정한 표현은 하나예요."
+  },
+  {
+    q:"다음 중 '내가 좋아하는 것'과 '내가 싫어하는 것'을 올바르게 짝지은 것은?",
+    a:[
+      "미역국 / 가지 볶음",
+      "가지 볶음 / 미역국",
+      "솔잎반 / 학교",
+      "레알 / 학원"
+    ],
+    c:0,
+    h:"음식 두 가지에 집중하세요."
+  },
+  {
+    q:"🏆 최종 보스! 다음 4가지 정보가 전부 맞는 것은?",
+    a:[
+      "레알 / 집 / 미역국 / 솔잎반",
+      "리얼 / 돈 / 미역국 / 솔입반",
+      "레알 / 휴대폰 / 가지 볶음 / 솔잎반",
+      "이얼 / 가족 / 미역국 / 소님반"
+    ],
+    c:0,
+    h:"가장 많이 쓰는 말 + 먼저 찾는 것 + 좋아하는 음식 + 반 이름을 한 번에 조합하세요."
+  }
+];
+
+let i=0;
+let lives=3;
+let coins=0;
+let score=0;
+let doubleNext=false;
+
+function $(id){return document.getElementById(id)}
+
+function update(){
+  $("num").textContent=i+1;
+  $("lives").textContent=lives;
+  $("coins").textContent=coins;
+  $("score").textContent=score;
+  $("bar").style.width=(i/questions.length*100)+"%";
+  $("hintBtn").disabled=coins<200;
+  $("lifeBtn").disabled=coins<300 || lives>=3;
+  $("doubleBtn").disabled=coins<400 || doubleNext;
+}
+
+function render(){
+  if(i>=questions.length){finish();return}
+
+  const x=questions[i];
+  $("question").textContent=x.q;
+  $("message").textContent="";
+  $("options").innerHTML=x.a.map((v,n)=>
+    `<button class="option" onclick="answer(${n})">${String.fromCharCode(65+n)}. ${v}</button>`
+  ).join("");
+  update();
+}
+
+function answer(n){
+  const x=questions[i];
+
+  document.querySelectorAll(".option").forEach(b=>b.disabled=true);
+
+  if(n===x.c){
+    const reward=doubleNext?300:150;
+    coins+=reward;
+    score+=10;
+    $("message").textContent=
+      "🎉 정답! +"+reward+" 코인 / +10점"+
+      (doubleNext?" 🔥 2배 보너스!":"");
+    $("message").style.color="#14803c";
+    doubleNext=false;
+  }else{
+    lives--;
+    score=Math.max(0,score-5);
+    $("message").textContent="❌ 오답! -5점 / ❤️ 기회 -1";
+    $("message").style.color="#c62828";
+  }
+
+  update();
+
+  if(lives<=0){
+    setTimeout(gameOver,750);
+    return;
+  }
+
+  setTimeout(()=>{
+    i++;
+    render();
+  },750);
+}
+
+function buyHint(){
+  if(coins<200)return;
+  coins-=200;
+  $("message").textContent="💡 힌트: "+questions[i].h;
+  $("message").style.color="#765500";
+  update();
+}
+
+function buyLife(){
+  if(coins<300 || lives>=3)return;
+  coins-=300;
+  lives++;
+  $("message").textContent="❤️ 기회가 1개 늘었어요!";
+  $("message").style.color="#a81768";
+  update();
+}
+
+function buyDouble(){
+  if(coins<400 || doubleNext)return;
+  coins-=400;
+  doubleNext=true;
+  $("message").textContent="🔥 다음 정답은 300코인!";
+  $("message").style.color="#a14c00";
+  update();
+}
+
+function gameOver(){
+  $("game").classList.add("hidden");
+  $("end").classList.remove("hidden");
+  $("endTitle").textContent="💥 게임 오버!";
+  $("final").innerHTML=
+    "기회를 모두 사용했어요.<br><br>"+
+    "🏆 점수: <b>"+score+"점</b><br>"+
+    "🪙 코인: <b>"+coins+"개</b>";
+}
+
+function finish(){
+  $("game").classList.add("hidden");
+  $("end").classList.remove("hidden");
+  $("bar").style.width="100%";
+  $("endTitle").textContent="🏆 15문제 클리어!";
+  $("final").innerHTML=
+    "<span class='big'>"+score+"점</span><br><br>"+
+    "🪙 최종 코인: <b>"+coins+"개</b><br><br>"+
+    "🕵️ 이 정도면 진짜 나를 잘 아는 사람!";
+}
+
+function restart(){
+  i=0;lives=3;coins=0;score=0;doubleNext=false;
+  $("end").classList.add("hidden");
+  $("game").classList.remove("hidden");
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
